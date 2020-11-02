@@ -47,7 +47,7 @@ func (s *service) Run() error {
 
 	for {
 		var ctx = context.Background()
-		txn := s.newrelic.StartTransaction("killmail queue check")
+		txn := s.newrelic.StartTransaction("dispatch queue check")
 		ctx = newrelic.NewContext(ctx, txn)
 
 		stop, err := s.redis.Get(ctx, zrule.QUEUE_STOP).Int64()
@@ -103,23 +103,30 @@ func (s *service) Run() error {
 
 func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
+	txn := newrelic.FromContext(ctx)
+
 	var message = new(zrule.Dispatchable)
 	err := json.Unmarshal(data, message)
 	if err != nil {
+		txn.NoticeError(err)
 		s.logger.WithError(err).WithField("data", string(data)).Error("failed to unmarsahl data onto dispatchable struct")
 		return
 	}
 
 	policy, err := s.policy.Policy(ctx, message.PolicyID)
 	if err != nil {
+		txn.NoticeError(err)
 		s.logger.WithError(err).WithField("policyID", message.PolicyID).Error("failed to look up policy")
 		return
 	}
+
+	txn.AddAttribute("policyID", message.PolicyID.Hex())
 
 	for _, actionID := range policy.Actions {
 		entry := s.logger.WithField("policyID", message.PolicyID.Hex()).WithField("actionID", actionID)
 		action, err := s.action.Action(ctx, actionID)
 		if err != nil {
+			txn.NoticeError(err)
 			entry.WithError(err).Error("failed to lookup action")
 			continue
 		}
@@ -128,12 +135,14 @@ func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
 		platform, err := s.serviceForPlatform(action)
 		if err != nil {
+			txn.NoticeError(err)
 			entry.WithError(err).Error("unable to determine platform to use")
 			continue
 		}
 
 		err = platform.Send(ctx, policy, message.ID, message.Hash)
 		if err != nil {
+			txn.NoticeError(err)
 			entry.WithError(err).Error("failed to send message to platform")
 			continue
 		}
@@ -145,7 +154,7 @@ func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 func (s *service) serviceForPlatform(action *zrule.Action) (zrule.Dispatcher, error) {
 	switch action.Platform {
 	case zrule.PlatformDiscord:
-		return discord.NewService(action)
+		return discord.NewService(action, s.client)
 	case zrule.PlatformSlack:
 		return slack.NewService(action, s.client)
 	case zrule.PlatformRest:

@@ -5,12 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/eveisesi/zrule"
+	newrelic "github.com/newrelic/go-agent"
 )
 
 type service struct {
@@ -26,6 +25,9 @@ func NewService(action *zrule.Action, client *http.Client) (zrule.Dispatcher, er
 }
 
 func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash string) error {
+
+	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send slack message")
+	defer seg.End()
 
 	uri := url.URL{
 		Scheme: "https",
@@ -48,25 +50,28 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 		return fmt.Errorf("failed to prepare request to slack: %w", err)
 	}
 
-	res, err := s.client.Do(req)
+	_, err = s.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to execute request to slack: %w", err)
 	}
 
-	if res.StatusCode != http.StatusOK {
-		defer res.Body.Close()
-		data, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return fmt.Errorf("failed to decode error response: %w", err)
-		}
+	// if res.StatusCode != http.StatusOK {
+	// 	defer res.Body.Close()
+	// 	data, err := ioutil.ReadAll(res.Body)
+	// 	if err != nil {
+	// 		return fmt.Errorf("failed to decode error response: %w", err)
+	// 	}
 
-		spew.Dump(string(data))
-	}
+	// }
 
 	return nil
 }
 
 func (s *service) SendTest(ctx context.Context, message string) error {
-	fmt.Println("Rest Test", message)
+
+	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send slack test message")
+	defer seg.End()
+
+	fmt.Println("Slack Test", message)
 	return nil
 }

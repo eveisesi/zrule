@@ -3,20 +3,21 @@ package discord
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/eveisesi/zrule"
+	newrelic "github.com/newrelic/go-agent"
 )
 
 type service struct {
-	dgo *discordgo.Session
-	// action *zrule.Action
+	dgo       *discordgo.Session
 	id, token string
 }
 
-func NewService(action *zrule.Action) (zrule.Dispatcher, error) {
+func NewService(action *zrule.Action, client *http.Client) (zrule.Dispatcher, error) {
 
 	if action.Platform != zrule.PlatformDiscord {
 		return nil, fmt.Errorf("invalid platform for discord service constructor")
@@ -26,6 +27,8 @@ func NewService(action *zrule.Action) (zrule.Dispatcher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize discord session: %w", err)
 	}
+
+	session.Client = client
 
 	uri, err := url.Parse(action.Endpoint)
 	if err != nil {
@@ -52,6 +55,9 @@ func NewService(action *zrule.Action) (zrule.Dispatcher, error) {
 
 func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash string) error {
 
+	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send discord message")
+	defer seg.End()
+
 	uri := url.URL{
 		Scheme: "https",
 		Host:   "zkillboard.com",
@@ -68,6 +74,9 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 }
 
 func (s *service) SendTest(ctx context.Context, message string) error {
+
+	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send discord test message")
+	defer seg.End()
 
 	_, err := s.dgo.WebhookExecute(s.id, s.token, true, &discordgo.WebhookParams{
 		Username: "zrule Test",

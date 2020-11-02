@@ -46,7 +46,6 @@ func (a *Action) IsValid() error {
 	case HostSlack.String():
 		a.Platform = PlatformSlack
 	case HostDiscord.String():
-		// https://discordapp.com/api/webhooks/622944119890640927/0A0zmvsX8DQAngqC8ij4hUgyFMRZsB-NYSxW3-XlGsmzQaK388s5o0LOFao2gLB6bAg3
 		a.Platform = PlatformDiscord
 	default:
 		a.Platform = PlatformRest

@@ -36,6 +36,7 @@ type zrule struct {
 // loadDB - takes in a configuration and establishes a connection with our datastore, in this application that is mongoDB
 // loadRedis - takes in a configuration and establises a connection with our cache, in this application that is Redis
 // loadNewrelic - takes in a configuration and configures a NR App to report metrics to NewRelic for monitoring
+// loadClient - create a client from the net/http library that is used on all outgoing http requests
 func basics(command string) *zrule {
 
 	app := zrule{}
