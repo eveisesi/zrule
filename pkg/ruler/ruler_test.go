@@ -1,6 +1,7 @@
 package ruler
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -12,169 +13,32 @@ func TestRules(t *testing.T) {
 		name   string
 		result bool
 	}{
-		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"basic.property",
-					"foobar",
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": "foobar",
-				},
-			},
 
-			"testing basic property equality (string)",
-			true,
-		},
 		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"basic.property",
-					12,
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": 12,
-				},
-			},
-			"testing basic property equality (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"gt",
-					"basic.property",
-					45,
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": 100,
-				},
-			},
-			"testing greater than (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"gte",
-					"basic.property",
-					100,
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": 100,
-				},
-			},
-			"testing greater than or equal to (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"lt",
-					"basic.property",
-					45,
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": 10,
-				},
-			},
-			"testing less than (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"lte",
-					"basic.property",
-					45,
-				},
-			},
-			map[string]interface{}{
-				"basic": map[string]interface{}{
-					"property": 45,
-				},
-			},
-			"testing less than or equal to (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"basic.property",
-					42,
-				},
-			},
-			map[string]interface{}{
-				"basic": []interface{}{
-					map[string]interface{}{
-						"property": 42,
+			[][]*Rule{
+				[]*Rule{
+					&Rule{
+						"in",
+						"a.b.c",
+						[]interface{}{2, 4, 5, 9},
+					},
+					&Rule{
+						"in",
+						"a.b.c",
+						[]interface{}{1, 3, 6},
 					},
 				},
-			},
-			"testing equality on an array with truth as first index array (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"basic.property",
-					42,
-				},
-			},
-			map[string]interface{}{
-				"basic": []interface{}{
-					map[string]interface{}{
-						"property": 32,
+				[]*Rule{
+					&Rule{
+						"in",
+						"a.b.c",
+						[]interface{}{9, 56, 46},
 					},
-					map[string]interface{}{
-						"property": 92,
+					&Rule{
+						"in",
+						"a.f.g",
+						[]interface{}{42, 35, 78},
 					},
-				},
-			},
-			"testing equality on an array with truth in second index (int)",
-			false,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"basic.property",
-					92,
-				},
-			},
-			map[string]interface{}{
-				"basic": []interface{}{
-					map[string]interface{}{
-						"property": 32,
-					},
-					map[string]interface{}{
-						"property": 92,
-					},
-				},
-			},
-			"testing equality on an array with truth in second index (int)",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"eq",
-					"a.b.c",
-					1,
 				},
 			},
 			map[string]interface{}{
@@ -182,35 +46,26 @@ func TestRules(t *testing.T) {
 					map[string]interface{}{
 						"b": []interface{}{
 							map[string]interface{}{
-								"c": 1,
+								"c": 9,
 							},
-						},
-					},
-				},
-			},
-			"testing equality on deeply nest array",
-			true,
-		},
-		{
-			[]*Rule{
-				&Rule{
-					"gt",
-					"a.b.c",
-					2,
-				},
-			},
-			map[string]interface{}{
-				"a": []interface{}{
-					map[string]interface{}{
-						"b": []interface{}{
 							map[string]interface{}{
-								"c": 4,
+								"d": 15,
+							},
+						},
+					},
+					map[string]interface{}{
+						"f": []interface{}{
+							map[string]interface{}{
+								"f": 9,
+							},
+							map[string]interface{}{
+								"g": 42,
 							},
 						},
 					},
 				},
 			},
-			"testing inequality on deeply nest array",
+			"testing of or, first should fail, second should pass",
 			true,
 		},
 	}
@@ -222,16 +77,15 @@ func TestRules(t *testing.T) {
 
 		result, err := r.Test(c.o)
 		if err != nil {
-			t.Errorf("rule test failed! %s\nrules: %s",
-				c.name,
-				c.rules,
-			)
+			t.Errorf("Test Failed with Error:\nName: %s\nError: %s", c.name, err)
 		}
 
 		if result != c.result {
-			t.Errorf("rule test failed! %s\nrules: %s\nExpected %t, Got %t",
+			values, _ := json.Marshal(c.o)
+			t.Errorf("Test Failed without Error:\nName: %s\nRules: %s\nValues: %s\nExpected %t, Got %t",
 				c.name,
 				c.rules,
+				string(values),
 				c.result,
 				result,
 			)

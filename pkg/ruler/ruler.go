@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type Rules []*Rule
+type Rules [][]*Rule
 
 func (r Rules) String() string {
 
@@ -35,14 +35,14 @@ func OptionErrOnMissingKey(r *Ruler) {
 }
 
 // SetRules takes in a slice of rules and set the on the ruler
-func (r *Ruler) SetRules(s []*Rule) {
+func (r *Ruler) SetRules(s [][]*Rule) {
 	r.rules = s
 }
 
 // SetRulesWithJSON takes in a slice of rule, unmarshals them onto a slice of rule, panic if unmarshal errors
 func (r *Ruler) SetRulesWithJSON(d []byte) {
 
-	s := make([]*Rule, 0)
+	s := make([][]*Rule, 0)
 	err := json.NewDecoder(bytes.NewReader(d)).Decode(&s)
 	if err != nil {
 		panic(err)
@@ -57,45 +57,77 @@ func (r *Ruler) SetRulesWithJSON(d []byte) {
 // The root element should be the equivalent of a JSON Object
 func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
 
-	for _, rule := range r.rules {
+	for _, andRule := range r.rules {
+		var passedCounter int
+		for _, rule := range andRule {
 
-		// At the top we should get a boolean response out of the interface
-		values, err := r.ValuesToEvaluate(rule, 0, o)
-		if err != nil {
-			return false, err
-		}
-		expected := reflect.TypeOf(rule.Value)
-		var passed bool
-		for _, value := range values {
-			actual := reflect.TypeOf(value)
-
-			if !expected.Comparable() || !actual.Comparable() {
-				return false, fmt.Errorf("expected or actual are not comparable")
-			}
-
-			passed, err = r.EvaluateValue(rule, value)
+			values, err := r.ValuesToEvaluate(rule.Path, 0, o)
 			if err != nil {
 				return false, err
 			}
-			if passed {
-				break
-			}
 
+			for _, ruleValue := range rule.Values {
+
+				for _, value := range values {
+					fmt.Println(ruleValue, value)
+
+					passed, err := r.EvaluateValue(rule.Comparator, ruleValue, value)
+					if err != nil {
+						return false, err
+					}
+					if passed {
+						passedCounter++
+						goto NextRule
+					}
+
+				}
+
+			}
+		NextRule:
 		}
-		if !passed {
-			return false, nil
+
+		if passedCounter == len(andRule) {
+			return true, nil
 		}
 
 	}
 
-	return true, nil
+	return false, nil
+
+	// for _, rule := range r.rules {
+
+	// 	// At the top we should get a boolean response out of the interface
+	// 	values, err := r.ValuesToEvaluate(rule, 0, o)
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	var passed bool
+	// 	for _, ruleValue := range rule.Values {
+
+	// 		for _, value := range values {
+	// 			passed, err = r.EvaluateValue(rule.Comparator, ruleValue, value)
+	// 			if err != nil {
+	// 				return false, err
+	// 			}
+	// 			if passed {
+	// 				goto AllValuesBreak
+	// 			}
+	// 		}
+
+	// 	}
+	// AllValuesBreak:
+	// 	if passed {
+	// 		return true, nil
+	// 	}
+
+	// }
 
 }
 
 var ErrMissingKeyFmt = "no value found for key %s"
 
-func (r *Ruler) ValuesToEvaluate(rule *Rule, depth int, o interface{}) ([]interface{}, error) {
-	path := rule.Path
+func (r *Ruler) ValuesToEvaluate(path string, depth int, o interface{}) ([]interface{}, error) {
+
 	parts := strings.Split(path, ".")
 	if len(parts) <= depth {
 		return nil, fmt.Errorf("depth greater than length of key")
@@ -117,7 +149,7 @@ func (r *Ruler) ValuesToEvaluate(rule *Rule, depth int, o interface{}) ([]interf
 		typeAtLoc := reflect.TypeOf(valAtLoc)
 
 		if typeAtLoc.Kind() == reflect.Slice || typeAtLoc.Kind() == reflect.Map {
-			subValues, err := r.ValuesToEvaluate(rule, depth+1, valAtLoc)
+			subValues, err := r.ValuesToEvaluate(path, depth+1, valAtLoc)
 			if err != nil {
 				return values, err
 			}
@@ -133,7 +165,7 @@ func (r *Ruler) ValuesToEvaluate(rule *Rule, depth int, o interface{}) ([]interf
 
 	case []interface{}:
 		for _, b := range a {
-			subValues, err := r.ValuesToEvaluate(rule, depth, b)
+			subValues, err := r.ValuesToEvaluate(path, depth, b)
 			if err != nil {
 				return values, err
 			}
@@ -147,27 +179,28 @@ func (r *Ruler) ValuesToEvaluate(rule *Rule, depth int, o interface{}) ([]interf
 	return values, nil
 }
 
-func (r *Ruler) EvaluateValue(rule *Rule, value interface{}) (bool, error) {
+func (r *Ruler) EvaluateValue(cp comparator, ruleValue interface{}, value interface{}) (bool, error) {
 	// Grab the type of the value from the Rule and the type of the value that we are comparing to the rule
-	expectedType := reflect.TypeOf(rule.Value)
-	actualType := reflect.TypeOf(value)
 
-	if !actualType.Comparable() || !expectedType.Comparable() {
-		return false, nil
-	}
-
-	switch rule.Comparator {
-	case eq:
-		return reflect.DeepEqual(rule.Value, value), nil
+	switch cp {
+	case eq, in:
+		return reflect.DeepEqual(ruleValue, value), nil
 	case neq:
-		return !reflect.DeepEqual(rule.Value, value), nil
+		return !reflect.DeepEqual(ruleValue, value), nil
 	case gt, gte, lt, lte:
-		return r.inequality(rule.Comparator, value, rule.Value), nil
+		return r.inequality(cp, value, ruleValue), nil
 	default:
+
 		return false, fmt.Errorf("unsupported comparator")
 	}
 
 }
+
+// func (r *Ruler) handleIn(expected, actual interface{}) (bool, error) {
+
+// 	return true, nil
+
+// }
 
 // runs equality comparison
 // separated in a different function because

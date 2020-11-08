@@ -15,9 +15,9 @@ This struct is exported here so that you can include it in your own JSON encodin
 but go-ruler has a facility to help decode your rules from JSON into its own structs.
 */
 type Rule struct {
-	Comparator comparator  `json:"comparator"`
-	Path       string      `json:"path"`
-	Value      interface{} `json:"value"`
+	Comparator comparator    `json:"comparator"`
+	Path       string        `json:"path"`
+	Values     []interface{} `json:"values"`
 }
 
 type comparator string
@@ -29,12 +29,14 @@ const (
 	gte comparator = "gte"
 	lt  comparator = "lt"
 	lte comparator = "lte"
+	in  comparator = "in"
 )
 
 var allComparators = []comparator{
 	eq, neq,
 	gt, gte,
 	lt, lte,
+	in,
 }
 
 func (c comparator) Valid() bool {
