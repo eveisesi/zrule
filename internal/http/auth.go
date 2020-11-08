@@ -9,23 +9,24 @@ import (
 	"time"
 
 	"github.com/eveisesi/zrule"
+	"github.com/go-chi/chi"
 )
 
-const loginURI = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=http://zrule.local:42000/auth/callback&client_id=26ee94c69dc4459dbf25c7c0cd03d03b&state=%s"
+// const loginURI = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=http://api.zrule.local:42000/auth/callback&client_id=26ee94c69dc4459dbf25c7c0cd03d03b&state=b07b8ef5395597d3632fd1c9ad1160505eb386fe0de16c2fcb7aa50d54929f43"
 
 func (s *server) handleGetAuthLogin(w http.ResponseWriter, r *http.Request) {
 	var ctx = r.Context()
 
-	cookie, _ := r.Cookie(zrule.COOKIE_zrule_AUTH_ATTEMPT)
-	if cookie == nil {
+	state := chi.URLParam(r, "state")
+	if state == "" {
 		s.writeResponse(w, http.StatusBadRequest, zrule.AuthStatus{
 			Status: zrule.StatusInvalid,
 		})
 		return
 	}
 
-	tokenKey := fmt.Sprintf(zrule.REDIS_zrule_AUTH_TOKEN, cookie.Value)
-	attemptKey := fmt.Sprintf(zrule.REDIS_zrule_AUTH_ATTEMPT, cookie.Value)
+	tokenKey := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_TOKEN, state)
+	attemptKey := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, state)
 	token, err := s.redis.Get(ctx, tokenKey).Result()
 	if err != nil && err.Error() != "redis: nil" {
 		s.logger.WithError(err).WithField("key", tokenKey).Error("unexpected error encountered from redis")
@@ -64,17 +65,9 @@ func (s *server) handlePostAuthLogin(w http.ResponseWriter, r *http.Request) {
 	h := hmac.New(sha256.New, nil)
 	_, _ = h.Write([]byte(time.Now().String()))
 	hash := fmt.Sprintf("%x", h.Sum(nil))
-	key := fmt.Sprintf(zrule.REDIS_zrule_AUTH_ATTEMPT, hash)
+	key := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, hash)
 	duration := time.Minute * 5
 	s.redis.Set(ctx, key, true, duration)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:    zrule.COOKIE_zrule_AUTH_ATTEMPT,
-		Value:   hash,
-		Expires: time.Now().Add(duration),
-		Path:    "/",
-	})
-	fmt.Printf(fmt.Sprintf("%s\n", loginURI), hash)
 
 	s.writeResponse(w, http.StatusOK, zrule.AuthStatus{
 		Status: zrule.StatusCreated,
@@ -93,7 +86,7 @@ func (s *server) handleGetAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := fmt.Sprintf(zrule.REDIS_zrule_AUTH_ATTEMPT, state)
+	key := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, state)
 	exists, err := s.redis.Exists(ctx, key).Result()
 	if err != nil && err.Error() != "redis: nil" {
 		s.logger.WithError(err).WithField("key", key).Error("unexpected error encountered from redis")
@@ -125,12 +118,33 @@ func (s *server) handleGetAuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	s.redis.Set(
 		ctx,
-		fmt.Sprintf(zrule.REDIS_zrule_AUTH_TOKEN, state),
+		fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_TOKEN, state),
 		bearer.AccessToken,
 		time.Minute*5,
 	)
 
-	s.writeResponse(w, http.StatusOK, map[string]interface{}{})
+	fmt.Println(bearer.AccessToken)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(`
+		<html>
+			<title>ZRule EVE SSO Auth Callback</title>
+			<script>
+				setTimeout(function() {
+					window.close()
+				}, 10000)
+
+			</script>
+
+			<body>
+				<h1>Auth Callback has been processed successfully</h1>
+				<h3>
+					Feel free to close this tab, else it will close in 10 Seconds
+				</h3>
+			</body>
+		</html>
+	`))
 
 }
 

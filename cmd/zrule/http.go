@@ -76,6 +76,7 @@ func httpCommand(c *cli.Context) {
 		userServ,
 		actionServ,
 		policyServ,
+		characterServ,
 	)
 
 	serverErrors := make(chan error, 1)

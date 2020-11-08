@@ -1,11 +1,11 @@
 package zrule
 
 // Cookie Keys
-const COOKIE_zrule_AUTH_ATTEMPT = "zrule-auth-attempt"
+const COOKIE_ZRULE_AUTH_ATTEMPT = "zrule-auth-attempt"
 
 // Redis Keys
-const REDIS_zrule_AUTH_ATTEMPT = "zrule::auth::attempt::%s"
-const REDIS_zrule_AUTH_TOKEN = "zrule::auth::attempt::%s::TOKEN"
+const REDIS_ZRULE_AUTH_ATTEMPT = "zrule::auth::attempt::%s"
+const REDIS_ZRULE_AUTH_TOKEN = "zrule::auth::attempt::%s::TOKEN"
 const REDIS_CCP_JWKS = "ccp::jwks"
 
 // ESI Timestamp Format

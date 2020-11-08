@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/eveisesi/zrule/internal/action"
+	"github.com/eveisesi/zrule/internal/character"
 	"github.com/eveisesi/zrule/internal/policy"
 	"github.com/eveisesi/zrule/internal/token"
 	"github.com/eveisesi/zrule/internal/user"
@@ -25,10 +26,11 @@ type server struct {
 	redis    *redis.Client
 	newrelic *newrelic.Application
 
-	token  token.Service
-	user   user.Service
-	action action.Service
-	policy policy.Service
+	token     token.Service
+	user      user.Service
+	action    action.Service
+	policy    policy.Service
+	character character.Service
 
 	server *http.Server
 }
@@ -42,17 +44,19 @@ func NewServer(
 	user user.Service,
 	action action.Service,
 	policy policy.Service,
+	character character.Service,
 ) *server {
 
 	s := &server{
-		port:     port,
-		logger:   logger,
-		redis:    redis,
-		newrelic: newrelic,
-		token:    token,
-		user:     user,
-		action:   action,
-		policy:   policy,
+		port:      port,
+		logger:    logger,
+		redis:     redis,
+		newrelic:  newrelic,
+		token:     token,
+		user:      user,
+		action:    action,
+		policy:    policy,
+		character: character,
 	}
 
 	s.server = &http.Server{
@@ -79,33 +83,48 @@ func (s *server) buildRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(
-		middleware.SetHeader("Content-Type", "application/json"),
 		middleware.Timeout(time.Second*4),
 		s.cors,
 		s.monitoring,
 	)
 
-	r.Post("/auth/login", s.handlePostAuthLogin)
-	r.Get("/auth/login", s.handleGetAuthLogin)
 	r.Get("/auth/callback", s.handleGetAuthCallback)
 
 	r.Group(func(r chi.Router) {
+		r.Use(
+			middleware.SetHeader("Content-Type", "application/json"),
+		)
+		r.Post("/auth/login", s.handlePostAuthLogin)
+		r.Get("/auth/login/{state}", s.handleGetAuthLogin)
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 
-		r.Use(s.auth)
-		r.Get("/paths", s.handleGetPaths)
-		r.Get("/policies", s.handleGetPolicies)
-		r.Post("/policies", s.handleCreatePolicy)
-		r.Delete("/policies/{policyID}", s.handleDeletePolicy)
-		r.Get("/actions", s.handleGetActions)
-		r.Post("/actions", s.handleCreateAction)
-		r.Post("/actions/{actionID}/test", s.handlePostActionTest)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"foo": "bar"}`))
 
-		r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-			s.writeResponse(w, http.StatusOK, map[string]interface{}{
-				"pong": 1,
-			})
 		})
+		r.Group(func(r chi.Router) {
 
+			r.Use(s.auth)
+			r.Get("/user", s.handleGetUser)
+			r.Get("/paths", s.handleGetPaths)
+			r.Get("/policies", s.handleGetPolicies)
+			r.Post("/policies", s.handleCreatePolicy)
+			r.Delete("/policies/{policyID}", s.handleDeletePolicy)
+			r.Get("/actions", s.handleGetActions)
+			r.Post("/actions", s.handleCreateAction)
+			r.Post("/actions/{actionID}/test", s.handlePostActionTest)
+
+			r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+				s.writeResponse(w, http.StatusOK, map[string]interface{}{
+					"pong": 1,
+				})
+			})
+
+		})
+	})
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
 	})
 
 	return r
