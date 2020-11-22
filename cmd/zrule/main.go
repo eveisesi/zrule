@@ -46,12 +46,12 @@ func basics(command string) *zrule {
 		log.Fatalf("failed to load configuration: %s", err)
 	}
 
-	app.cfg.NewRelic.AppName = fmt.Sprintf("%s-%s", app.cfg.NewRelic.AppName, command)
-
 	app.logger, err = loadLogger(app.cfg, command)
 	if err != nil {
 		log.Fatalf("failed to load logger: %s", err)
 	}
+
+	app.cfg.NewRelic.AppName = fmt.Sprintf("%s-%s", app.cfg.NewRelic.AppName, command)
 
 	app.newrelic, err = configNRApplication(app.cfg, app.logger)
 	if err != nil {
@@ -96,15 +96,14 @@ func main() {
 		cli.Command{
 			Name:    "listener",
 			Aliases: []string{"l"},
-
-			Usage:  "Initializes the websocket client that listens to the ZKillboard Websocket",
-			Action: listenerCommand,
+			Usage:   "Initializes the websocket client that listens to the ZKillboard Websocket",
+			Action:  listenerCommand,
 		},
 		cli.Command{
 			Name:    "dispatcher",
 			Aliases: []string{"d"},
-			Usage:   "Initializes the websocket client that listens to the ZKillboard Websocket",
-			Action:  dispatcherCommand,
+			// Usage:   "Initializes the websocket client that listens to the ZKillboard Websocket",
+			Action: dispatcherCommand,
 		},
 	}
 

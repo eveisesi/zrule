@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/eveisesi/zrule/pkg/ruler"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,11 +25,11 @@ type Dispatchable struct {
 type Policy struct {
 	ID        primitive.ObjectID   `bson:"_id,omitempty" json:"_id,omitempty"`
 	Name      string               `bson:"name" json:"name"`
-	OwnerID   primitive.ObjectID   `bson:"ownerID" json:"ownerID"`
-	Rules     []*Rule              `bson:"rules" json:"rules"`
+	OwnerID   primitive.ObjectID   `bson:"owner_id" json:"owner_id"`
+	Rules     [][]*ruler.Rule      `bson:"rules" json:"rules"`
 	Actions   []primitive.ObjectID `bson:"actions" json:"actions"`
-	CreatedAt time.Time            `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time            `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt time.Time            `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time            `bson:"updated_at" json:"updated_at"`
 }
 
 // Heavily mirror's ruler.Rule
@@ -42,7 +43,7 @@ type Property string
 
 const (
 	PropertyMoonID                Property = "moon_id"
-	PropertySolarSystemID         Property = "solar_system_od"
+	PropertySolarSystemID         Property = "solar_system_id"
 	PropertyWarID                 Property = "war_id"
 	PropertyZKBNPC                Property = "zkb.npc"
 	PropertyZKBAWOX               Property = "zkb.awox"

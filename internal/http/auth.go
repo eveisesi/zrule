@@ -12,7 +12,21 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// const loginURI = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=http://api.zrule.local:42000/auth/callback&client_id=26ee94c69dc4459dbf25c7c0cd03d03b&state=b07b8ef5395597d3632fd1c9ad1160505eb386fe0de16c2fcb7aa50d54929f43"
+const loginURI = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=http://api.zrule.local:42000/auth/callback&client_id=26ee94c69dc4459dbf25c7c0cd03d03b&state=%s"
+
+func (s *server) handleGetAuthURL(w http.ResponseWriter, r *http.Request) {
+
+	state := chi.URLParam(r, "state")
+	if state == "" {
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("state cannot be empty"))
+		return
+	}
+
+	s.writeResponse(w, http.StatusOK, map[string]interface{}{
+		"url": fmt.Sprintf(loginURI, state),
+	})
+
+}
 
 func (s *server) handleGetAuthLogin(w http.ResponseWriter, r *http.Request) {
 	var ctx = r.Context()
@@ -127,13 +141,13 @@ func (s *server) handleGetAuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`
+	_, _ = w.Write([]byte(`
 		<html>
 			<title>ZRule EVE SSO Auth Callback</title>
 			<script>
 				setTimeout(function() {
 					window.close()
-				}, 10000)
+				}, 1000)
 
 			</script>
 

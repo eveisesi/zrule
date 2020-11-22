@@ -1,5 +1,7 @@
 package ruler
 
+import "fmt"
+
 /*
 This struct is the main format for rules or conditions in ruler-compatable libraries.
 Here's a sample in JSON format:
@@ -15,9 +17,28 @@ This struct is exported here so that you can include it in your own JSON encodin
 but go-ruler has a facility to help decode your rules from JSON into its own structs.
 */
 type Rule struct {
-	Comparator comparator    `json:"comparator"`
-	Path       string        `json:"path"`
-	Values     []interface{} `json:"values"`
+	Comparator comparator    `bson:"comparator" json:"comparator"`
+	Path       string        `bson:"path" json:"path"`
+	Values     []interface{} `bson:"values" json:"values"`
+}
+
+func (r Rule) Validate() error {
+
+	if !r.Comparator.Valid() {
+		return fmt.Errorf("invalid comparator %s specified", r.Comparator)
+	}
+	if len(r.Path) == 0 {
+		return fmt.Errorf("empty path specified, please specific valid path")
+	}
+	if len(r.Values) == 0 {
+		return fmt.Errorf("no rule values specified. Please specific atleast one value for the rule to match against")
+	}
+
+	if len(r.Values) > 1 && r.Comparator != in {
+		return fmt.Errorf("invalid values specified for provided comparator. Comparator must be in when values greater than 1")
+	}
+
+	return nil
 }
 
 type comparator string
@@ -32,7 +53,7 @@ const (
 	in  comparator = "in"
 )
 
-var allComparators = []comparator{
+var AllComparators = []comparator{
 	eq, neq,
 	gt, gte,
 	lt, lte,
@@ -40,7 +61,7 @@ var allComparators = []comparator{
 }
 
 func (c comparator) Valid() bool {
-	for _, v := range allComparators {
+	for _, v := range AllComparators {
 		if c == v {
 			return true
 		}

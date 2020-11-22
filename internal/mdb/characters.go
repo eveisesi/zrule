@@ -16,7 +16,7 @@ type characterRepository struct {
 	characters *mongo.Collection
 }
 
-func NewCharacterRepository(d *mongo.Database) (zrule.CharacterRespository, error) {
+func NewCharacterRepository(d *mongo.Database) (zrule.CharacterRepository, error) {
 
 	characters := d.Collection("characters")
 	_, err := characters.Indexes().CreateOne(context.Background(), mongo.IndexModel{Keys: bsonx.Doc{{Key: "id", Value: bsonx.Int32(1)}}, Options: &options.IndexOptions{Name: newString("uniqueCharacterID"), Unique: newBool(true)}})
@@ -40,26 +40,17 @@ func (r *characterRepository) Character(ctx context.Context, id uint64) (*zrule.
 
 }
 
-func (r *characterRepository) CreateCharacter(ctx context.Context, character *zrule.Character) error {
+func (r *characterRepository) CreateCharacter(ctx context.Context, character *zrule.Character) (*zrule.Character, error) {
 
-	now := time.Now().Unix()
-	character.CreatedAt = now
-	character.UpdatedAt = now
+	character.CreatedAt = time.Now()
+	character.UpdatedAt = time.Now()
 
 	_, err := r.characters.InsertOne(ctx, character)
 	if err != nil {
 		if !IsUniqueConstrainViolation(err) {
-			return err
+			return nil, err
 		}
 	}
-	return nil
-
-}
-
-func (r *characterRepository) DeleteCharacter(ctx context.Context, id uint64) error {
-
-	_, err := r.characters.DeleteOne(ctx, primitive.D{primitive.E{Key: "id", Value: id}})
-
-	return err
+	return character, nil
 
 }

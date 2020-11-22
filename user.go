@@ -16,14 +16,14 @@ type UserRepository interface {
 
 type User struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	CharacterID       uint64             `bson:"characterID" json:"characterID"`
-	OwnerHash         string             `bson:"ownerHash" json:"ownerHash"`
-	AccessToken       string             `bson:"accessToken" json:"accessToken"`
-	RefreshToken      string             `bson:"refreshToken" json:"refreshToken"`
+	CharacterID       uint64             `bson:"character_id" json:"character_id"`
+	OwnerHash         string             `bson:"owner_hash" json:"owner_hash"`
+	AccessToken       string             `bson:"access_token" json:"access_token"`
+	RefreshToken      string             `bson:"refresh_token" json:"refresh_token"`
 	Expires           time.Time          `bson:"expires" json:"expires"`
 	Disabled          bool               `bson:"disabled" json:"disabled"`
-	DisabledReason    *string            `bson:"disabledReason" json:"disabledReason"`
-	DisabledTimestamp *time.Time         `bson:"disabledTime" json:"disabledTime"`
-	CreatedAt         time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt         time.Time          `bson:"updatedAt" json:"updatedAt"`
+	DisabledReason    *string            `bson:"disabled_reason" json:"disabled_reason"`
+	DisabledTimestamp *time.Time         `bson:"disabled_time" json:"disabled_time"`
+	CreatedAt         time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt         time.Time          `bson:"updated_at" json:"updated_at"`
 }

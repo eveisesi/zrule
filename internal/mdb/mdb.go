@@ -17,6 +17,7 @@ func Connect(ctx context.Context, uri *url.URL) (*mongo.Client, error) {
 
 	// monitor := nrmongo.NewCommandMonitor(nil)
 	// .SetMonitor(monitor)
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri.String()))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to mongo db")
@@ -76,7 +77,7 @@ func BuildFilters(operators ...*zrule.Operator) primitive.D {
 
 				ops = append(ops, primitive.E{Key: or, Value: arr})
 			default:
-				panic(fmt.Sprintf("valid type %#T supplied, expected one of [[]*zrule.Operator]", o))
+				panic(fmt.Sprintf("valid type %#T supplied, expected one of []*zrule.Operator", o))
 			}
 
 		case zrule.AndOp:
@@ -89,7 +90,7 @@ func BuildFilters(operators ...*zrule.Operator) primitive.D {
 
 				ops = append(ops, primitive.E{Key: and, Value: arr})
 			default:
-				panic(fmt.Sprintf("valid type %#T supplied, expected one of [[]*zrule.Operator]", o))
+				panic(fmt.Sprintf("valid type %#T supplied, expected one of []*zrule.Operator", o))
 			}
 
 		case zrule.InOp:
@@ -102,7 +103,7 @@ func BuildFilters(operators ...*zrule.Operator) primitive.D {
 
 				ops = append(ops, primitive.E{Key: a.Column, Value: primitive.D{primitive.E{Key: in, Value: arr}}})
 			default:
-				panic(fmt.Sprintf("valid type %#T supplied, expected one of [[]zruleOpValue]", o))
+				panic(fmt.Sprintf("valid type %#T supplied, expected one of []*zruleOpValue", o))
 			}
 		case zrule.NotInOp:
 			switch o := a.Value.(type) {
@@ -114,7 +115,7 @@ func BuildFilters(operators ...*zrule.Operator) primitive.D {
 
 				ops = append(ops, primitive.E{Key: a.Column, Value: primitive.D{primitive.E{Key: notin, Value: arr}}})
 			default:
-				panic(fmt.Sprintf("valid type %#T supplied, expected one of [[]zrule.OpValue]", o))
+				panic(fmt.Sprintf("valid type %#T supplied, expected one of []*zrule.OpValue", o))
 			}
 		}
 	}

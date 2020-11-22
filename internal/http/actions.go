@@ -23,7 +23,7 @@ func (s *server) handleGetActions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("ownerID", user.CharacterID))
+	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("ownerID", user.ID))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by owner id")
 		s.logger.WithError(err).Errorln()
@@ -118,7 +118,7 @@ func (s *server) handleCreateAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	action.OwnerID = user.CharacterID
+	action.OwnerID = user.ID
 
 	_, err = s.action.CreateAction(ctx, action)
 	if err != nil {

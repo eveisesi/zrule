@@ -1,15 +1,20 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
-const production = "production"
-const prod = production
+type environment string
 
-const development = "development"
-const dev = development
+const production environment = "production"
+const development environment = "development"
+
+func (e environment) String() string {
+	return string(e)
+}
 
 type config struct {
 	Mongo struct {
@@ -27,10 +32,11 @@ type config struct {
 	}
 
 	NewRelic struct {
-		AppName string `envconfig:"NEW_RELIC_APP_NAME"`
+		AppName    string `envconfig:"NEW_RELIC_APP_NAME"`
+		DevEnabled bool
 	}
 
-	Env string
+	Env environment
 
 	Developer struct {
 		Name string
@@ -54,13 +60,25 @@ type config struct {
 	}
 }
 
-func loadConfig() (config config, err error) {
+var validEnvironment = []environment{production, development}
+
+func (c config) validateEnvironment() bool {
+	for _, env := range validEnvironment {
+		if c.Env == env {
+			return true
+		}
+	}
+
+	return false
+}
+
+func loadConfig() (cfg config, err error) {
 	_ = godotenv.Load("./cmd/zrule/.env")
 
-	err = envconfig.Process("", &config)
+	err = envconfig.Process("", &cfg)
 
-	if config.Env != prod {
-		config.Env = dev
+	if !cfg.validateEnvironment() {
+		return config{}, fmt.Errorf("invalid env declared")
 	}
 
 	return

@@ -57,8 +57,8 @@ type KillmailAttacker struct {
 	Alliance    *Alliance    `bson:"-" json:"-"`
 	Character   *Character   `bson:"-" json:"-"`
 	Corporation *Corporation `bson:"-" json:"-"`
-	Ship        *Type        `bson:"-" json:"-"`
-	Weapon      *Type        `bson:"-" json:"-"`
+	Ship        *Item        `bson:"-" json:"-"`
+	Weapon      *Item        `bson:"-" json:"-"`
 }
 
 type KillmailItem struct {
@@ -73,7 +73,7 @@ type KillmailItem struct {
 	Singleton         uint8   `bson:"singleton" json:"singleton"`
 	IsParent          bool    `bson:"isparent" json:"isparent"`
 
-	Type  *Type           `bson:"-" json:"-"`
+	Type  *Item           `bson:"-" json:"-"`
 	Items []*KillmailItem `bson:"items" json:"items"`
 }
 
@@ -91,7 +91,7 @@ type KillmailVictim struct {
 	Alliance    *Alliance    `bson:"-" json:"-"`
 	Character   *Character   `bson:"-" json:"-"`
 	Corporation *Corporation `bson:"-" json:"-"`
-	Ship        *Type        `bson:"-" json:"-"`
+	Ship        *Item        `bson:"-" json:"-"`
 
 	Position *Position       `bson:"position" json:"position"`
 	Items    []*KillmailItem `bson:"items" json:"items"`

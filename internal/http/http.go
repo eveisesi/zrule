@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/eveisesi/zrule/pkg/ruler"
+
 	"github.com/eveisesi/zrule/internal/action"
-	"github.com/eveisesi/zrule/internal/character"
 	"github.com/eveisesi/zrule/internal/policy"
 	"github.com/eveisesi/zrule/internal/token"
 	"github.com/eveisesi/zrule/internal/user"
@@ -18,10 +19,12 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type server struct {
 	port     uint
+	db       *mongo.Database
 	logger   *logrus.Logger
 	redis    *redis.Client
 	newrelic *newrelic.Application
@@ -37,6 +40,7 @@ type server struct {
 
 func NewServer(
 	port uint,
+	db *mongo.Database,
 	logger *logrus.Logger,
 	redis *redis.Client,
 	newrelic *newrelic.Application,
@@ -44,19 +48,18 @@ func NewServer(
 	user user.Service,
 	action action.Service,
 	policy policy.Service,
-	character character.Service,
 ) *server {
 
 	s := &server{
-		port:      port,
-		logger:    logger,
-		redis:     redis,
-		newrelic:  newrelic,
-		token:     token,
-		user:      user,
-		action:    action,
-		policy:    policy,
-		character: character,
+		port:     port,
+		db:       db,
+		logger:   logger,
+		redis:    redis,
+		newrelic: newrelic,
+		token:    token,
+		user:     user,
+		action:   action,
+		policy:   policy,
 	}
 
 	s.server = &http.Server{
@@ -83,7 +86,7 @@ func (s *server) buildRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(
-		middleware.Timeout(time.Second*4),
+		// middleware.Timeout(time.Second*4),
 		s.cors,
 		s.monitoring,
 	)
@@ -96,10 +99,14 @@ func (s *server) buildRouter() *chi.Mux {
 		)
 		r.Post("/auth/login", s.handlePostAuthLogin)
 		r.Get("/auth/login/{state}", s.handleGetAuthLogin)
+		r.Get("/auth/url/{state}", s.handleGetAuthURL)
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"foo": "bar"}`))
+			err := s.db.Client().Ping(r.Context(), nil)
+			if err != nil {
+				s.writeError(w, http.StatusInternalServerError, fmt.Errorf("failed to ping mongo db server"))
+				return
+			}
 
 		})
 		r.Group(func(r chi.Router) {
@@ -108,16 +115,33 @@ func (s *server) buildRouter() *chi.Mux {
 			r.Get("/user", s.handleGetUser)
 			r.Get("/paths", s.handleGetPaths)
 			r.Get("/policies", s.handleGetPolicies)
+			r.Get("/policies/{policyID}", s.handleGetPolicyByID)
+			r.Get("/policies/{policyID}/actions", s.handleGetPolicyActions)
 			r.Post("/policies", s.handleCreatePolicy)
+			r.Patch("/policies/{policyID}", s.handleUpdatePolicy)
 			r.Delete("/policies/{policyID}", s.handleDeletePolicy)
 			r.Get("/actions", s.handleGetActions)
 			r.Post("/actions", s.handleCreateAction)
 			r.Post("/actions/{actionID}/test", s.handlePostActionTest)
+			r.Post("/rules/validate", s.handlePostValidateRules)
 
 			r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 				s.writeResponse(w, http.StatusOK, map[string]interface{}{
 					"pong": 1,
 				})
+			})
+
+			r.Get("/ruler/comparators", func(w http.ResponseWriter, r *http.Request) {
+				s.writeResponse(w, http.StatusOK, ruler.AllComparators)
+			})
+
+			r.Get("/example", func(w http.ResponseWriter, r *http.Request) {
+
+				w.Write([]byte(`
+				{"attackers":[{"alliance_id":99005381,"character_id":1950120006,"corporation_id":994783381,"damage_done":5132,"final_blow":true,"security_status":-9.9,"ship_type_id":29340,"weapon_type_id":2205}],"killmail_id":88486806,"killmail_time":"2020-11-09T00:39:43Z","solar_system_id":30002758,"victim":{"alliance_id":99008228,"character_id":1466390582,"corporation_id":795045209,"damage_taken":5132,"items":[{"flag":14,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":13,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":21,"item_type_id":4435,"quantity_dropped":1,"singleton":0},{"flag":92,"item_type_id":34268,"quantity_destroyed":1,"singleton":0},{"flag":20,"item_type_id":4435,"quantity_dropped":1,"singleton":0},{"flag":12,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":11,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":16,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":15,"item_type_id":8263,"quantity_dropped":1,"singleton":0},{"flag":19,"item_type_id":35657,"quantity_dropped":1,"singleton":0},{"flag":22,"item_type_id":4435,"quantity_dropped":1,"singleton":0}],"position":{"x":108720300043.89568,"y":-311116434845.82336,"z":-12767733739.166466},"ship_type_id":19744},"zkb":{"locationID":40175118,"hash":"3c9ed419c00f123ff8d46475b05b70616d1381d8","fittedValue":1511799.92,"totalValue":2807175.66,"points":6,"npc":false,"solo":true,"awox":false,"esi":"https://esi.evetech.net/latest/killmails/88486806/3c9ed419c00f123ff8d46475b05b70616d1381d8/","url":"https://zkillboard.com/kill/88486806/"}}
+
+				`))
+
 			})
 
 		})
@@ -163,6 +187,6 @@ func (s *server) writeError(w http.ResponseWriter, code int, err error) {
 		return
 	}
 
-	s.writeResponse(w, code, err)
+	s.writeResponse(w, code, nil)
 
 }

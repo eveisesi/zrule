@@ -13,7 +13,6 @@ func TestRules(t *testing.T) {
 		name   string
 		result bool
 	}{
-
 		{
 			[][]*Rule{
 				[]*Rule{

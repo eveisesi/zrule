@@ -27,32 +27,13 @@ var (
 
 type (
 	Service interface {
-		// // Alliances
-		// GetAlliancesAllianceID(ctx context.Context, id uint, etag string) (*zrule.Alliance, Meta)
-
-		// // Characters
-		GetCharactersCharacterID(ctx context.Context, id uint64, etag string) (*zrule.Character, Meta)
-
-		// // Corporations
-		// GetCorporationsCorporationID(ctx context.Context, id uint, etag string) (*zrule.Corporation, Meta)
-
-		// // Killmails
-		// GetKillmailsKillmailIDKillmailHash(ctx context.Context, id uint, hash string) (*zrule.Killmail, Meta)
-
-		// // Market
-		// HeadMarketsRegionIDTypes(ctx context.Context, regionID uint) Meta
-		// GetMarketGroups(ctx context.Context) ([]int, Meta)
-		// GetMarketGroupsMarketGroupID(ctx context.Context, id int) (*zrule.MarketGroup, Meta)
-		// GetMarketsRegionIDTypes(ctx context.Context, regionID uint, page null.String) ([]int, Meta)
-		// GetMarketsRegionIDHistory(ctx context.Context, regionID uint, typeID uint) ([]*zrule.HistoricalRecord, Meta)
-		// GetMarketsPrices(ctx context.Context) ([]*zrule.MarketPrices, Meta)
-
-		// // Status
-		// GetStatus(ctx context.Context) (*zrule.ServerStatus, Meta)
-
-		// // Universe
-		// GetUniverseSystemsSystemID(ctx context.Context, id uint) (*zrule.SolarSystem, Meta)
-		// GetUniverseTypesTypeID(ctx context.Context, id uint) (*zrule.Type, []*zrule.TypeAttribute, Meta)
+		allianceService
+		characterService
+		constellationService
+		corporationService
+		itemService
+		regionService
+		solarSystemService
 	}
 	service struct {
 		client      *http.Client
@@ -212,30 +193,30 @@ func (s *service) request(ctx context.Context, r request) ([]byte, Meta) {
 
 // retrieveExpiresHeader takes a map[string]string of the response headers, checks to see if the "Expires" key exists, and if it does, parses the timestamp and returns a time.Time. If duraction
 // is greater than zero(0), then that number of minutes will be add to the expires time that is parsed from the header.
-func (s *service) retrieveExpiresHeader(h map[string]string, duration int) time.Time {
-	if _, ok := h["Expires"]; !ok {
-		return time.Now().Add(time.Minute * 60)
-	}
-	expires, err := time.Parse(zrule.ESI_EXPIRES_HEADER_FORMAT, h["Expires"])
-	if err != nil {
-		return expires
-	}
+// func (s *service) retrieveExpiresHeader(h map[string]string, duration int) time.Time {
+// 	if _, ok := h["Expires"]; !ok {
+// 		return time.Now().Add(time.Minute * 60)
+// 	}
+// 	expires, err := time.Parse(zrule.ESI_EXPIRES_HEADER_FORMAT, h["Expires"])
+// 	if err != nil {
+// 		return expires
+// 	}
 
-	if duration > 0 {
-		expires = expires.Add(time.Minute * time.Duration(duration))
-	}
+// 	if duration > 0 {
+// 		expires = expires.Add(time.Minute * time.Duration(duration))
+// 	}
 
-	return expires
-}
+// 	return expires
+// }
 
-// retrieveEtagHeader is a helper method that retrieves an Etag for the most recent request to
-// ESI
-func (s *service) retrieveEtagHeader(h map[string]string) string {
-	if _, ok := h["Etag"]; !ok {
-		return ""
-	}
-	return h["Etag"]
-}
+// // retrieveEtagHeader is a helper method that retrieves an Etag for the most recent request to
+// // ESI
+// func (s *service) retrieveEtagHeader(h map[string]string) string {
+// 	if _, ok := h["Etag"]; !ok {
+// 		return ""
+// 	}
+// 	return h["Etag"]
+// }
 
 // retrieveErrorCount is a helper method that retrieves the number of errors that this application
 // has triggered and how many more can be triggered before potentially encountereding an HTTP Status 420

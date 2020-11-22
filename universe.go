@@ -1,139 +1,126 @@
 package zrule
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
-type UniverseRepository interface {
-	Constellation(ctx context.Context, id uint) (*Constellation, error)
-	Constellations(ctx context.Context, operators ...*Operator) ([]*Constellation, error)
-
-	Region(ctx context.Context, id uint) (*Region, error)
-	Regions(ctx context.Context, operators ...*Operator) ([]*Region, error)
-
-	SolarSystem(ctx context.Context, id uint) (*SolarSystem, error)
-	SolarSystems(ctx context.Context, operators ...*Operator) ([]*SolarSystem, error)
-	CreateSolarSystem(ctx context.Context, system *SolarSystem) error
-
-	Type(ctx context.Context, id uint) (*Type, error)
-	Types(ctx context.Context, operators ...*Operator) ([]*Type, error)
-	CreateType(ctx context.Context, invType *Type) error
-
-	TypeAttributes(ctx context.Context, operators ...*Operator) ([]*TypeAttribute, error)
-	CreateTypeAttributes(ctx context.Context, attributes []*TypeAttribute) error
-
-	TypeCategory(ctx context.Context, id uint) (*TypeCategory, error)
-	TypeCategories(ctx context.Context, operators ...*Operator) ([]*TypeCategory, error)
-
-	TypeFlag(ctx context.Context, id uint) (*TypeFlag, error)
-	TypeFlags(ctx context.Context, operators ...*Operator) ([]*TypeFlag, error)
-
-	TypeGroup(ctx context.Context, id uint) (*TypeGroup, error)
-	TypeGroups(ctx context.Context, operators ...*Operator) ([]*TypeGroup, error)
+type AllianceRepository interface {
+	Alliance(ctx context.Context, id uint) (*Alliance, error)
+	CreateAlliance(ctx context.Context, alliance *Alliance) (*Alliance, error)
 }
 
-type SolarSystem struct {
-	ID              uint   `bson:"id" json:"id"`
-	Name            string `bson:"name" json:"name"`
-	RegionID        uint   `bson:"regionID" json:"regionID"`
-	ConstellationID uint   `bson:"constellationID" json:"constellationID"`
-	FactionID       *int   `bson:"factionID" json:"factionID"`
-	SunTypeID       *int   `bson:"sunTypeID" json:"sunTypeID"`
-	Position        struct {
-		X float64 `bson:"x" json:"x"`
-		Y float64 `bson:"y" json:"y"`
-		Z float64 `bson:"z" json:"z"`
-	} `bson:"position" json:"position"`
-	Security  float64 `bson:"security" json:"security"`
-	CreatedAt int64   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt int64   `bson:"updatedAt" json:"updatedAt"`
+// Alliance is an object representing the database table.
+type Alliance struct {
+	ID        uint      `bson:"id" json:"id"`
+	Name      string    `bson:"name" json:"name"`
+	Ticker    string    `bson:"ticker" json:"ticker"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+}
 
-	Constellation *Constellation `bson:"-" json:"-"`
+type CharacterRepository interface {
+	Character(ctx context.Context, id uint64) (*Character, error)
+	CreateCharacter(ctx context.Context, character *Character) (*Character, error)
+}
+
+type Character struct {
+	ID        uint64    `bson:"id" json:"id"`
+	Name      string    `bson:"name" json:"name"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+type ConstellationRepository interface {
+	Constellation(ctx context.Context, id uint) (*Constellation, error)
+	CreateConstellation(ctx context.Context, id uint) (*Constellation, error)
 }
 
 // Constellation is an object representing the database table.
 type Constellation struct {
-	ID       uint   `bson:"id" json:"id"`
-	Name     string `bson:"name" json:"name"`
-	RegionID uint   `bson:"regionID" json:"regionID"`
-	Position struct {
-		X float64 `bson:"x" json:"x"`
-		Y float64 `bson:"y" json:"y"`
-		Z float64 `bson:"z" json:"z"`
-	} `bson:"position" json:"position"`
-	FactionID *int  `bson:"factionID" json:"factionID"`
-	CreatedAt int64 `bson:"createdAt" json:"createdAt"`
-	UpdatedAt int64 `bson:"updatedAt" json:"updatedAt"`
+	ID        uint      `bson:"id" json:"id"`
+	Name      string    `bson:"name" json:"name"`
+	RegionID  uint      `bson:"region_id" json:"region_id"`
+	FactionID *int      `bson:"faction_id" json:"faction_id"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 
 	Region *Region `bson:"-" json:"-"`
 }
 
+type CorporationRepository interface {
+	Corporation(ctx context.Context, id uint) (*Corporation, error)
+	CreateCorporation(ctx context.Context, corporation *Corporation) (*Corporation, error)
+}
+
+type Corporation struct {
+	ID        uint      `bson:"id" json:"id"`
+	Name      string    `bson:"name" json:"name"`
+	Ticker    string    `bson:"ticker" json:"ticker"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+type SolarSystemRepository interface {
+	SolarSystem(ctx context.Context, id uint) (*SolarSystem, error)
+	CreateSolarSystem(ctx context.Context, system *SolarSystem) (*SolarSystem, error)
+}
+
+type SolarSystem struct {
+	ID              uint      `bson:"id" json:"id"`
+	Name            string    `bson:"name" json:"name"`
+	SecurityStatus  float64   `bson:"security_status" json:"security_status"`
+	ConstellationID uint      `bson:"constellation_id" json:"constellation_id"`
+	CreatedAt       time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt       time.Time `bson:"updated_at" json:"updated_at"`
+
+	Constellation *Constellation `bson:"-" json:"-"`
+}
+
+type RegionRepository interface {
+	Region(ctx context.Context, id uint) (*Region, error)
+	CreateRegion(ctx context.Context, region *Region) (*Region, error)
+}
+
 // Region is an object representing the database table.
 type Region struct {
-	ID       uint   `bson:"id" json:"id"`
-	Name     string `bson:"name" json:"name"`
-	Position struct {
-		X float64 `bson:"x" json:"x"`
-		Y float64 `bson:"y" json:"y"`
-		Z float64 `bson:"z" json:"z"`
-	} `bson:"position" json:"position"`
-	FactionID *uint `bson:"factionID" json:"factionID"`
-	CreatedAt int64 `bson:"createdAt" json:"createdAt"`
-	UpdatedAt int64 `bson:"updatedAt" json:"updatedAt"`
+	ID        uint      `bson:"id" json:"id"`
+	Name      string    `bson:"name" json:"name"`
+	FactionID *uint     `bson:"faction_id" json:"faction_id"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-// Type is an object representing the database table.
-type Type struct {
-	ID            uint   `bson:"id" json:"id"`
-	GroupID       uint   `bson:"groupID" json:"groupID"`
-	Name          string `bson:"name" json:"name"`
-	Description   string `bson:"description" json:"description"`
-	Published     bool   `bson:"published" json:"published"`
-	MarketGroupID *uint  `bson:"marketGroupID" json:"marketGroupID"`
-	CreatedAt     int64  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt     int64  `bson:"updatedAt" json:"updatedAt"`
-
-	Group *TypeGroup `bson:"-" json:"-"`
+type ItemRepository interface {
+	Item(ctx context.Context, id uint) (*Item, error)
+	CreateItem(ctx context.Context, item *Item) (*Item, error)
 }
 
-// TypeAttribute is an object representing the database table.
-type TypeAttribute struct {
-	TypeID      uint  `bson:"typeID" json:"typeID"`
-	AttributeID uint  `bson:"attributeID" json:"attributeID"`
-	Value       int64 `bson:"value" json:"value"`
-	CreatedAt   int64 `bson:"createdAt" json:"createdAt"`
-	UpdatedAt   int64 `bson:"updatedAt" json:"updatedAt"`
+// Item is an object representing the database table.
+type Item struct {
+	ID            uint      `bson:"id" json:"id"`
+	GroupID       uint      `bson:"group_id" json:"group_id"`
+	Name          string    `bson:"name" json:"name"`
+	Description   string    `bson:"description" json:"description"`
+	Published     bool      `bson:"published" json:"published"`
+	MarketGroupID *uint     `bson:"marketGroupID" json:"marketGroupID"`
+	CreatedAt     time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `bson:"updated_at" json:"updated_at"`
+
+	Group *ItemGroup `bson:"-" json:"-"`
 }
 
-// TypeCategory is an object representing the database table.
-type TypeCategory struct {
-	ID        uint   `bson:"id" json:"id"`
-	Name      string `bson:"name" json:"name"`
-	Published bool   `bson:"published" json:"published"`
-	CreatedAt int64  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt int64  `bson:"updatedAt" json:"updatedAt"`
+type ItemGroupRepository interface {
+	ItemGroup(ctx context.Context, id uint) (*ItemGroup, error)
+	CreateItemGroup(ctx context.Context, group *ItemGroup) (*ItemGroup, error)
 }
 
-// TypeFlag is an object representing the database table.
-type TypeFlag struct {
-	ID        uint   `bson:"id" json:"id"`
-	Name      string `bson:"name" json:"name"`
-	Text      string `bson:"text" json:"text"`
-	CreatedAt int64  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt int64  `bson:"updatedAt" json:"updatedAt"`
-}
-
-// TypeGroup is an object representing the database table.
-type TypeGroup struct {
-	ID         uint   `bson:"id" json:"id"`
-	CategoryID uint   `bson:"categoryID" json:"categoryID"`
-	Name       string `bson:"name" json:"name"`
-	Published  bool   `bson:"published" json:"published"`
-	CreatedAt  int64  `bson:"createdAt" json:"createdAt"`
-	UpdatedAt  int64  `bson:"updatedAt" json:"updatedAt"`
-}
-
-// TypeMaterial is an object representing the database table.
-type TypeMaterial struct {
-	TypeID         uint `bson:"typeID" json:"typeID"`
-	MaterialTypeID uint `bson:"materialTypeID" json:"materialTypeID"`
-	Quantity       uint `bson:"quantity" json:"quantity"`
+// ItemGroup is an object representing the database table.
+type ItemGroup struct {
+	ID         uint      `bson:"id" json:"id"`
+	CategoryID uint      `bson:"category_id" json:"category_id"`
+	Name       string    `bson:"name" json:"name"`
+	Published  bool      `bson:"published" json:"published"`
+	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
 }

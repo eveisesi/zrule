@@ -19,6 +19,20 @@ func (r Rules) String() string {
 	return string(data)
 }
 
+func Validate(rules [][]*Rule) error {
+
+	for _, andRules := range rules {
+		for _, rule := range andRules {
+			if err := rule.Validate(); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+
+}
+
 type Ruler struct {
 	rules  Rules
 	config struct {

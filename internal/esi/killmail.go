@@ -68,7 +68,7 @@ package esi
 
 // 	err = json.Unmarshal(response, esiKillmail)
 // 	if err != nil {
-// 		m.Msg = errors.Wrapf(err, "unable to unmarshal response body on request %s", path)
+// 		m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 // 		return nil, m
 // 	}
 

@@ -78,6 +78,7 @@ func (s *service) Run() error {
 				}
 				break
 			}
+
 			_, err = s.redis.ZAdd(context.Background(), zrule.QUEUES_KILLMAIL_PROCESSING, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(message)}).Result()
 			if err != nil {
 				s.logger.WithError(err).WithField("payload", string(message)).Error("unable to push killmail to processing queue")

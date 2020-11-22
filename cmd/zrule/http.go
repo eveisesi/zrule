@@ -10,7 +10,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/eveisesi/zrule/internal/action"
-	"github.com/eveisesi/zrule/internal/character"
 	"github.com/eveisesi/zrule/internal/esi"
 	"github.com/eveisesi/zrule/internal/http"
 	"github.com/eveisesi/zrule/internal/mdb"
@@ -63,12 +62,12 @@ func httpCommand(c *cli.Context) {
 
 	esiServ := esi.NewService(basics.redis, "zrule v0.1.0")
 	actionServ := action.NewService(actionRepo)
-	characterServ := character.NewService(basics.redis, basics.logger, basics.newrelic, esiServ, characterRepo)
 	userServ := user.NewService(basics.logger, basics.redis, tokenServ, characterServ, userRepo)
 	policyServ := policy.NewService(policyRepo)
 
 	server := http.NewServer(
 		basics.cfg.Server.Port,
+		basics.db,
 		basics.logger,
 		basics.redis,
 		basics.newrelic,
@@ -76,7 +75,6 @@ func httpCommand(c *cli.Context) {
 		userServ,
 		actionServ,
 		policyServ,
-		characterServ,
 	)
 
 	serverErrors := make(chan error, 1)

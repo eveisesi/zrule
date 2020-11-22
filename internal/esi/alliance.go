@@ -1,18 +1,21 @@
 package esi
 
-// Alliance is an object representing the database table.
-// type Alliance struct {
-// 	ID     uint   `json:"id"`
-// 	Name   string `json:"name"`
-// 	Ticker string `json:"ticker"`
-// }
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
-// func (r Alliance) validate() bool {
-// 	if r.Name == "" || r.Ticker == "" {
-// 		return false
-// 	}
-// 	return true
-// }
+	"github.com/eveisesi/zrule"
+)
+
+type allianceService interface {
+	GetAlliancesAllianceID(ctx context.Context, id uint) (*zrule.Alliance, Meta)
+}
+
+func validateAlliance(alliance *zrule.Alliance) bool {
+	return alliance.Name != "" && alliance.Ticker != ""
+}
 
 // GetAlliancesAllianceID makes a HTTP GET Request to the /alliances/{alliance_id} endpoint
 // for information about the provided alliance
@@ -20,56 +23,41 @@ package esi
 // Documentation: https://esi.evetech.net/ui/#/Alliance/get_alliances_alliance_id
 // Version: v3
 // Cache: 3600 sec (1 Hour)
-// func (s *service) GetAlliancesAllianceID(ctx context.Context, id uint, etag string) (*zrule.Alliance, Meta) {
+func (s *service) GetAlliancesAllianceID(ctx context.Context, id uint) (*zrule.Alliance, Meta) {
 
-// 	path := fmt.Sprintf("/v3/alliances/%d/", id)
-// 	headers := make(map[string]string)
+	path := fmt.Sprintf("/v3/alliances/%d/", id)
 
-// 	if etag != "" {
-// 		headers["If-None-Match"] = etag
-// 	}
+	request := request{
+		method:  http.MethodGet,
+		path:    path,
+		headers: make(map[string]string),
+	}
 
-// 	request := request{
-// 		method:  http.MethodGet,
-// 		path:    path,
-// 		headers: headers,
-// 	}
+	response, m := s.request(ctx, request)
+	if m.IsErr() {
+		return nil, m
+	}
 
-// 	response, m := s.request(ctx, request)
-// 	if m.IsErr() {
-// 		return nil, m
-// 	}
+	alliance := new(zrule.Alliance)
 
-// 	esiAlliance := new(Alliance)
+	switch m.Code {
+	case 200:
+		err = json.Unmarshal(response, alliance)
+		if err != nil {
+			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
+			return nil, m
+		}
 
-// 	switch m.Code {
-// 	case 200:
-// 		err = json.Unmarshal(response, esiAlliance)
-// 		if err != nil {
-// 			m.Msg = errors.Wrapf(err, "unable to unmarshal response body on request %s", path)
-// 			return nil, m
-// 		}
+		alliance.ID = id
 
-// 		esiAlliance.ID = id
+		if !validateAlliance(alliance) {
+			m.Code = http.StatusUnprocessableEntity
+			return nil, m
+		}
+	default:
+		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 
-// 		if !esiAlliance.validate() {
-// 			m.Code = http.StatusUnprocessableEntity
-// 			return nil, m
-// 		}
+	}
 
-// 	}
-
-// 	alliance := new(zrule.Alliance)
-// 	err = copier.Copy(alliance, esiAlliance)
-// 	if err != nil {
-// 		m.Msg = err
-// 		return nil, m
-// 	}
-
-// 	alliance.CachedUntil = s.retrieveExpiresHeader(m.Headers, 0).Unix()
-// 	if s.retrieveEtagHeader(m.Headers) != "" {
-// 		alliance.Etag = s.retrieveEtagHeader(m.Headers)
-// 	}
-
-// 	return alliance, m
-// }
+	return alliance, m
+}

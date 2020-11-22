@@ -12,6 +12,10 @@ func configNRApplication(cfg config, logger *logrus.Logger) (app *newrelic.Appli
 
 	appName := cfg.NewRelic.AppName
 
+	if !cfg.NewRelic.DevEnabled {
+		return nil, nil
+	}
+
 	if cfg.Env != production {
 		appName = fmt.Sprintf("%s-%s", cfg.Env, appName)
 		if cfg.Developer.Name != "" {
@@ -23,6 +27,11 @@ func configNRApplication(cfg config, logger *logrus.Logger) (app *newrelic.Appli
 	opts = append(opts, newrelic.ConfigFromEnvironment())
 	opts = append(opts, newrelic.ConfigAppName(appName))
 	opts = append(opts, newrelic.ConfigInfoLogger(logger.Writer()))
+	opts = append(opts, func(c *newrelic.Config) {
+		if cfg.Env == production || cfg.NewRelic.DevEnabled {
+			c.Enabled = true
+		}
+	})
 
 	app, err = newrelic.NewApplication(opts...)
 	if err != nil {

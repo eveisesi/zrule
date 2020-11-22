@@ -20,16 +20,16 @@ type ActionRepository interface {
 
 type Action struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	OwnerID        uint64             `bson:"ownerID" json:"ownerID"`
+	OwnerID        primitive.ObjectID `bson:"owner_id" json:"owner_id"`
 	Label          string             `bson:"label" json:"label"`
 	Platform       Platform           `bson:"platform" json:"platform"`
 	Endpoint       string             `bson:"endpoint" json:"endpoint"`
 	Tested         bool               `bson:"tested" json:"tested"`
-	IsDisabled     bool               `bson:"isDisabled" json:"isDisabled"`
-	DisabledReason *string            `bson:"disabledReason" json:"disabledReason"`
+	IsDisabled     bool               `bson:"is_disabled" json:"is_disabled"`
+	DisabledReason *string            `bson:"disabled_reason" json:"disabled_reason"`
 	Infractions    []*Infraction      `bson:"infractions" json:"infractions"`
-	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
+	CreatedAt      time.Time          `bson:"created_at" json:"created_at"`
+	UpdatedAt      time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 func (a *Action) IsValid() error {
