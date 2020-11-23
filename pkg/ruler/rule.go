@@ -17,7 +17,7 @@ This struct is exported here so that you can include it in your own JSON encodin
 but go-ruler has a facility to help decode your rules from JSON into its own structs.
 */
 type Rule struct {
-	Comparator comparator    `bson:"comparator" json:"comparator"`
+	Comparator Comparator    `bson:"comparator" json:"comparator"`
 	Path       string        `bson:"path" json:"path"`
 	Values     []interface{} `bson:"values" json:"values"`
 }
@@ -34,33 +34,33 @@ func (r Rule) Validate() error {
 		return fmt.Errorf("no rule values specified. Please specific atleast one value for the rule to match against")
 	}
 
-	if len(r.Values) > 1 && r.Comparator != in {
+	if len(r.Values) > 1 && r.Comparator != IN {
 		return fmt.Errorf("invalid values specified for provided comparator. Comparator must be in when values greater than 1")
 	}
 
 	return nil
 }
 
-type comparator string
+type Comparator string
 
 const (
-	eq  comparator = "eq"
-	neq comparator = "neq"
-	gt  comparator = "gt"
-	gte comparator = "gte"
-	lt  comparator = "lt"
-	lte comparator = "lte"
-	in  comparator = "in"
+	EQ  Comparator = "eq"
+	NEQ Comparator = "neq"
+	GT  Comparator = "gt"
+	GTE Comparator = "gte"
+	LT  Comparator = "lt"
+	LTE Comparator = "lte"
+	IN  Comparator = "in"
 )
 
-var AllComparators = []comparator{
-	eq, neq,
-	gt, gte,
-	lt, lte,
-	in,
+var AllComparators = []Comparator{
+	EQ, NEQ,
+	GT, GTE,
+	LT, LTE,
+	IN,
 }
 
-func (c comparator) Valid() bool {
+func (c Comparator) Valid() bool {
 	for _, v := range AllComparators {
 		if c == v {
 			return true
@@ -71,6 +71,6 @@ func (c comparator) Valid() bool {
 }
 
 // Implements the stringer interface
-func (c comparator) String() string {
+func (c Comparator) String() string {
 	return string(c)
 }

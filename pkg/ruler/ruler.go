@@ -193,15 +193,15 @@ func (r *Ruler) ValuesToEvaluate(path string, depth int, o interface{}) ([]inter
 	return values, nil
 }
 
-func (r *Ruler) EvaluateValue(cp comparator, ruleValue interface{}, value interface{}) (bool, error) {
+func (r *Ruler) EvaluateValue(cp Comparator, ruleValue interface{}, value interface{}) (bool, error) {
 	// Grab the type of the value from the Rule and the type of the value that we are comparing to the rule
 
 	switch cp {
-	case eq, in:
+	case EQ, IN:
 		return reflect.DeepEqual(ruleValue, value), nil
-	case neq:
+	case NEQ:
 		return !reflect.DeepEqual(ruleValue, value), nil
-	case gt, gte, lt, lte:
+	case GT, GTE, LT, LTE:
 		return r.inequality(cp, value, ruleValue), nil
 	default:
 
@@ -220,7 +220,7 @@ func (r *Ruler) EvaluateValue(cp comparator, ruleValue interface{}, value interf
 // separated in a different function because
 // we need to do another type assertion here
 // and some other acrobatics
-func (r *Ruler) inequality(op comparator, actual, expected interface{}) bool {
+func (r *Ruler) inequality(op Comparator, actual, expected interface{}) bool {
 	// need some variables for these deals
 	var cmpStr [2]string
 	var isStr [2]bool
@@ -296,60 +296,60 @@ func (r *Ruler) inequality(op comparator, actual, expected interface{}) bool {
 	return false
 }
 
-func compareStrings(op comparator, actual, expected string) bool {
+func compareStrings(op Comparator, actual, expected string) bool {
 	switch op {
-	case gt:
+	case GT:
 		return actual > expected
-	case gte:
+	case GTE:
 		return actual >= expected
-	case lt:
+	case LT:
 		return actual < expected
-	case lte:
+	case LTE:
 		return actual <= expected
 	default:
 		return false
 	}
 }
 
-func compareInts(op comparator, actual, expected int64) bool {
+func compareInts(op Comparator, actual, expected int64) bool {
 	switch op {
-	case gt:
+	case GT:
 		return actual > expected
-	case gte:
+	case GTE:
 		return actual >= expected
-	case lt:
+	case LT:
 		return actual < expected
-	case lte:
+	case LTE:
 		return actual <= expected
 	default:
 		return false
 	}
 }
 
-func compareUints(op comparator, actual, expected uint64) bool {
+func compareUints(op Comparator, actual, expected uint64) bool {
 	switch op {
-	case gt:
+	case GT:
 		return actual > expected
-	case gte:
+	case GTE:
 		return actual >= expected
-	case lt:
+	case LT:
 		return actual < expected
-	case lte:
+	case LTE:
 		return actual <= expected
 	default:
 		return false
 	}
 }
 
-func compareFloats(op comparator, actual, expected float64) bool {
+func compareFloats(op Comparator, actual, expected float64) bool {
 	switch op {
-	case gt:
+	case GT:
 		return actual > expected
-	case gte:
+	case GTE:
 		return actual >= expected
-	case lt:
+	case LT:
 		return actual < expected
-	case lte:
+	case LTE:
 		return actual <= expected
 	default:
 		return false
