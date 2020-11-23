@@ -49,6 +49,7 @@ func (s *server) handleGetSearchName(w http.ResponseWriter, r *http.Request) {
 		if category == i {
 			valid = true
 			category = v
+			break
 		}
 	}
 

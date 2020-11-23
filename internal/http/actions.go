@@ -60,7 +60,7 @@ func (s *server) handlePostActionTest(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
 
 	}
-	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("ownerID", user.CharacterID), zrule.NewEqualOperator("_id", objectID))
+	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
 	if err != nil {
 		s.logger.WithError(err).WithField("actionID", actionID).Error("failed to find action for provided actionID")
 		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to find action for provided actionID"))

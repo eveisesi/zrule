@@ -33,12 +33,13 @@ type Policy struct {
 }
 
 type PathObj struct {
-	Display     string `json:"display"`
-	Description string `json:"description"`
-	Category    string `json:"category,omitempty"`
-	Searchable  bool   `json:"searchable"`
-	Format      string `json:"format"`
-	Path        Path   `json:"path"`
+	Display     string             `json:"display"`
+	Description string             `json:"description"`
+	Category    string             `json:"category,omitempty"`
+	Searchable  bool               `json:"searchable"`
+	Format      string             `json:"format"`
+	Path        Path               `json:"path"`
+	Comparators []ruler.Comparator `json:"comparators"`
 }
 
 type Path string
@@ -47,10 +48,11 @@ var (
 	PathSolarSystemID = PathObj{
 		Display:     "Solar System",
 		Description: "The Solar System that the Killmail occurred in",
-		Category:    "solar_system",
+		Category:    "system",
 		Searchable:  true,
 		Format:      "string",
 		Path:        Path("solar_system_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBNPC = PathObj{
 		Display:     "ZKillboard Is NPC",
@@ -58,6 +60,7 @@ var (
 		Searchable:  false,
 		Format:      "boolean",
 		Path:        Path("zkb.npc"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBAWOX = PathObj{
 		Display:     "ZKillboard Is AWOX",
@@ -65,6 +68,7 @@ var (
 		Searchable:  false,
 		Format:      "boolean",
 		Path:        Path("zkb.awox"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBSolo = PathObj{
 		Display:     "ZKillboard Is Solo",
@@ -72,6 +76,7 @@ var (
 		Searchable:  false,
 		Format:      "boolean",
 		Path:        Path("zkb.solo"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBFittedValue = PathObj{
 		Display:     "Zkillboard Fitted Value",
@@ -79,6 +84,7 @@ var (
 		Searchable:  false,
 		Format:      "number",
 		Path:        Path("zkb.fittedValue"),
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
 	}
 	PathZKBTotalValue = PathObj{
 		Display:     "ZKillboard Total Value",
@@ -86,6 +92,7 @@ var (
 		Searchable:  false,
 		Format:      "number",
 		Path:        Path("zkb.totalValue"),
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
 	}
 	PathVictimAllianceID = PathObj{
 		Display:     "Victim Alliance",
@@ -94,6 +101,7 @@ var (
 		Format:      "string",
 		Category:    "alliance",
 		Path:        Path("victim.alliance_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimCorporationID = PathObj{
 		Display:     "Victim Corporation",
@@ -102,6 +110,7 @@ var (
 		Format:      "string",
 		Category:    "corporation",
 		Path:        Path("victim.corporation_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimCharacterID = PathObj{
 		Display:     "Victim Character",
@@ -110,6 +119,7 @@ var (
 		Format:      "string",
 		Category:    "character",
 		Path:        Path("victim.character_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimShipTypeID = PathObj{
 		Display:     "Victim Ship",
@@ -118,6 +128,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("victim.ship_type_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimItemsTypeID = PathObj{
 		Display:     "Victim Items",
@@ -126,6 +137,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("victim.items.item_type_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathAttackerAllianceID = PathObj{
 		Display:     "Attacker Alliance",
@@ -134,6 +146,7 @@ var (
 		Format:      "string",
 		Category:    "alliance",
 		Path:        Path("attackers.alliance_id"),
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerCorporationID = PathObj{
 		Display:     "Attacker Corporation",
@@ -142,6 +155,7 @@ var (
 		Format:      "string",
 		Category:    "alliance",
 		Path:        Path("attackers.corporation_id"),
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerCharacterID = PathObj{
 		Display:     "Attacker",
@@ -150,6 +164,7 @@ var (
 		Format:      "string",
 		Category:    "character",
 		Path:        Path("attackers.character_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathAttackerShipTypeID = PathObj{
 		Display:     "Attacker Ship",
@@ -158,6 +173,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("attackers.ship_type_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathAttackerWeaponTypeID = PathObj{
 		Display:     "Attacker Weapon",
@@ -166,6 +182,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("attackers.weapon_type_id"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 )
 

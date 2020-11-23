@@ -83,7 +83,6 @@ func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
 			for _, ruleValue := range rule.Values {
 
 				for _, value := range values {
-					fmt.Println(ruleValue, value)
 
 					passed, err := r.EvaluateValue(rule.Comparator, ruleValue, value)
 					if err != nil {
@@ -107,34 +106,6 @@ func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
 	}
 
 	return false, nil
-
-	// for _, rule := range r.rules {
-
-	// 	// At the top we should get a boolean response out of the interface
-	// 	values, err := r.ValuesToEvaluate(rule, 0, o)
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	var passed bool
-	// 	for _, ruleValue := range rule.Values {
-
-	// 		for _, value := range values {
-	// 			passed, err = r.EvaluateValue(rule.Comparator, ruleValue, value)
-	// 			if err != nil {
-	// 				return false, err
-	// 			}
-	// 			if passed {
-	// 				goto AllValuesBreak
-	// 			}
-	// 		}
-
-	// 	}
-	// AllValuesBreak:
-	// 	if passed {
-	// 		return true, nil
-	// 	}
-
-	// }
 
 }
 

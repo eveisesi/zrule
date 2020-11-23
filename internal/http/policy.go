@@ -24,7 +24,7 @@ func (s *server) handleGetPolicies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("ownerID", user.ID))
+	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("owner_id", user.ID))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by owner id")
 		s.logger.WithError(err).Errorln()
@@ -47,10 +47,10 @@ func (s *server) handleGetPolicyByID(w http.ResponseWriter, r *http.Request) {
 
 	objectID, err := primitive.ObjectIDFromHex(policyID)
 	if err != nil {
-		msg := "provided action id is invalid"
+		msg := "provided policy id is invalid"
 		s.logger.WithError(err).Error(msg)
 		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-
+		return
 	}
 
 	user := UserFromContext(ctx)
@@ -61,7 +61,7 @@ func (s *server) handleGetPolicyByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("ownerID", user.ID), zrule.NewEqualOperator("_id", objectID))
+	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by owner id")
 		s.logger.WithError(err).Errorln()
@@ -99,12 +99,12 @@ func (s *server) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
 
 	policy.OwnerID = user.ID
 
-	if len(policy.Actions) == 0 {
-		msg := "Policies are required to have at least one action associated with them when they are created"
-		s.logger.Error(msg)
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-		return
-	}
+	// if len(policy.Actions) == 0 {
+	// 	msg := "Policies are required to have at least one action associated with them when they are created"
+	// 	s.logger.Error(msg)
+	// 	s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
+	// 	return
+	// }
 
 	policy, err = s.policy.CreatePolicy(ctx, policy)
 	if err != nil {
@@ -141,10 +141,10 @@ func (s *server) handleUpdatePolicy(w http.ResponseWriter, r *http.Request) {
 		msg := "provided action id is invalid"
 		s.logger.WithError(err).Error(msg)
 		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-
+		return
 	}
 
-	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("ownerID", user.ID), zrule.NewEqualOperator("_id", objectID))
+	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by owner id")
 		s.logger.WithError(err).Errorln()
@@ -228,7 +228,7 @@ func (s *server) handleGetPolicyActions(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("ownerID", user.ID), zrule.NewEqualOperator("_id", objectID))
+	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch policies by owner id")
 		s.logger.WithError(err).Errorln()
@@ -242,7 +242,7 @@ func (s *server) handleGetPolicyActions(w http.ResponseWriter, r *http.Request) 
 	for i, actionID := range policy.Actions {
 		actionIDs[i] = actionID
 	}
-	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("ownerID", user.ID), zrule.NewInOperator("_id", actionIDs))
+	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewInOperator("_id", actionIDs))
 
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by ownerID and actionIDs")
@@ -277,10 +277,10 @@ func (s *server) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 
 	objectID, err := primitive.ObjectIDFromHex(policyID)
 	if err != nil {
-		msg := "provided action id is invalid"
+		msg := "provided policy id is invalid"
 		s.logger.WithError(err).Error(msg)
 		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-
+		return
 	}
 
 	err = s.policy.DeletePolicy(ctx, objectID)
