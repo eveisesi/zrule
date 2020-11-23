@@ -32,56 +32,172 @@ type Policy struct {
 	UpdatedAt time.Time            `bson:"updated_at" json:"updated_at"`
 }
 
-// Heavily mirror's ruler.Rule
-type Rule struct {
-	Comparator string      `json:"comparator"`
-	Path       string      `json:"path"`
-	Value      interface{} `json:"value"`
+type PathObj struct {
+	Display     string `json:"display"`
+	Description string `json:"description"`
+	Category    string `json:"category,omitempty"`
+	Searchable  bool   `json:"searchable"`
+	Format      string `json:"format"`
+	Path        Path   `json:"path"`
 }
 
-type Property string
+type Path string
 
-const (
-	PropertyMoonID                Property = "moon_id"
-	PropertySolarSystemID         Property = "solar_system_id"
-	PropertyWarID                 Property = "war_id"
-	PropertyZKBNPC                Property = "zkb.npc"
-	PropertyZKBAWOX               Property = "zkb.awox"
-	PropertyZKBSolo               Property = "zkb.solo"
-	PropertyZKBFittedValue        Property = "zkb.fittedValue"
-	PropertyZKBTotalValue         Property = "zkb.totalValue"
-	PropertyVictimAllianceID      Property = "victim.alliance_id"
-	PropertyVictimCorporationID   Property = "victim.corporation_id"
-	PropertyVictimFractionID      Property = "victim.fraction_id"
-	PropertyVictimCharacterID     Property = "victim.character_id"
-	PropertyVictimShipTypeID      Property = "victim.ship_type_id"
-	PropertyVictimItemsTypeID     Property = "victim.items.item_type_id"
-	PropertyAttackerAllianceID    Property = "attackers.alliance_id"
-	PropertyAttackerCorporationID Property = "attackers.corporation_id"
-	PropertyAttackerFractionID    Property = "attackers.fraction_id"
-	PropertyAttackerCharacterID   Property = "attackers.character_id"
-	PropertyAttackerShipTypeID    Property = "attackers.ship_type_id"
-	PropertyAttackerWeaponTypeID  Property = "attackers.weapon_type_id"
+var (
+	PathSolarSystemID = PathObj{
+		Display:     "Solar System",
+		Description: "The Solar System that the Killmail occurred in",
+		Category:    "solar_system",
+		Searchable:  true,
+		Format:      "string",
+		Path:        Path("solar_system_id"),
+	}
+	PathZKBNPC = PathObj{
+		Display:     "ZKillboard Is NPC",
+		Description: "ZKillboard has labeled the killmail as an NPC Kill",
+		Searchable:  false,
+		Format:      "boolean",
+		Path:        Path("zkb.npc"),
+	}
+	PathZKBAWOX = PathObj{
+		Display:     "ZKillboard Is AWOX",
+		Description: "Zkillboard has labeled the killmail as an AWOX Kill",
+		Searchable:  false,
+		Format:      "boolean",
+		Path:        Path("zkb.awox"),
+	}
+	PathZKBSolo = PathObj{
+		Display:     "ZKillboard Is Solo",
+		Description: "ZKIllboard has labeled the killmail as a Solo Kill",
+		Searchable:  false,
+		Format:      "boolean",
+		Path:        Path("zkb.solo"),
+	}
+	PathZKBFittedValue = PathObj{
+		Display:     "Zkillboard Fitted Value",
+		Description: "The ISK value of all modules and ammo fitted to the ship",
+		Searchable:  false,
+		Format:      "number",
+		Path:        Path("zkb.fittedValue"),
+	}
+	PathZKBTotalValue = PathObj{
+		Display:     "ZKillboard Total Value",
+		Description: "The ISK value of the killmail",
+		Searchable:  false,
+		Format:      "number",
+		Path:        Path("zkb.totalValue"),
+	}
+	PathVictimAllianceID = PathObj{
+		Display:     "Victim Alliance",
+		Description: "The alliance that the victim is apart of",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "alliance",
+		Path:        Path("victim.alliance_id"),
+	}
+	PathVictimCorporationID = PathObj{
+		Display:     "Victim Corporation",
+		Description: "The Corporation that the victim is apart of",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "corporation",
+		Path:        Path("victim.corporation_id"),
+	}
+	PathVictimCharacterID = PathObj{
+		Display:     "Victim Character",
+		Description: "The Victim",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "character",
+		Path:        Path("victim.character_id"),
+	}
+	PathVictimShipTypeID = PathObj{
+		Display:     "Victim Ship",
+		Description: "The ship that the victim was flying",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "item",
+		Path:        Path("victim.ship_type_id"),
+	}
+	PathVictimItemsTypeID = PathObj{
+		Display:     "Victim Items",
+		Description: "The items that the victim pocessed",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "item",
+		Path:        Path("victim.items.item_type_id"),
+	}
+	PathAttackerAllianceID = PathObj{
+		Display:     "Attacker Alliance",
+		Description: "The alliance that the attacker belongs to",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "alliance",
+		Path:        Path("attackers.alliance_id"),
+	}
+	PathAttackerCorporationID = PathObj{
+		Display:     "Attacker Corporation",
+		Description: "The corporation that the attacker belongs to",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "alliance",
+		Path:        Path("attackers.corporation_id"),
+	}
+	PathAttackerCharacterID = PathObj{
+		Display:     "Attacker",
+		Description: "The Attacker",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "character",
+		Path:        Path("attackers.character_id"),
+	}
+	PathAttackerShipTypeID = PathObj{
+		Display:     "Attacker Ship",
+		Description: "The Ship that the attacker was flying",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "item",
+		Path:        Path("attackers.ship_type_id"),
+	}
+	PathAttackerWeaponTypeID = PathObj{
+		Display:     "Attacker Weapon",
+		Description: "The weapon that the attacker used",
+		Searchable:  true,
+		Format:      "string",
+		Category:    "item",
+		Path:        Path("attackers.weapon_type_id"),
+	}
 )
 
-var AllProperties = []Property{
-	PropertyMoonID, PropertySolarSystemID, PropertyWarID,
-	PropertyZKBNPC, PropertyZKBAWOX, PropertyZKBSolo, PropertyZKBFittedValue, PropertyZKBTotalValue,
-	PropertyVictimAllianceID, PropertyVictimCorporationID, PropertyVictimFractionID, PropertyVictimCharacterID,
-	PropertyVictimShipTypeID, PropertyVictimItemsTypeID, PropertyAttackerAllianceID, PropertyAttackerCorporationID,
-	PropertyAttackerFractionID, PropertyAttackerCharacterID, PropertyAttackerShipTypeID, PropertyAttackerWeaponTypeID,
+var AllPaths = []PathObj{
+	PathSolarSystemID,
+	PathZKBNPC,
+	PathZKBAWOX,
+	PathZKBSolo,
+	PathZKBFittedValue,
+	PathZKBTotalValue,
+	PathVictimAllianceID,
+	PathVictimCorporationID,
+	PathVictimCharacterID,
+	PathVictimShipTypeID,
+	PathVictimItemsTypeID,
+	PathAttackerAllianceID,
+	PathAttackerCorporationID,
+	PathAttackerCharacterID,
+	PathAttackerShipTypeID,
+	PathAttackerWeaponTypeID,
 }
 
-func (p Property) IsValid() bool {
-	for _, v := range AllProperties {
-		if v == p {
+func (p Path) IsValid() bool {
+	for _, v := range AllPaths {
+		if v.Path == p {
 			return true
 		}
 	}
 	return false
 }
 
-func (p Property) String() string {
+func (p Path) String() string {
 	return string(p)
 }
 

@@ -18,6 +18,6 @@ func (s *server) handleGetPaths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.writeResponse(w, http.StatusOK, zrule.AllProperties)
+	s.writeResponse(w, http.StatusOK, zrule.AllPaths)
 
 }
