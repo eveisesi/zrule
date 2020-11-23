@@ -198,7 +198,7 @@ func (s *service) getSignatureKey(token *jwt.Token) (interface{}, error) {
 
 	ctx := context.Background()
 
-	result, err := s.redis.Get(ctx, zrule.REDIS_CCP_JWKS).Bytes()
+	result, err := s.redis.Get(ctx, zrule.CACHE_CCP_JWKS).Bytes()
 	if err != nil && err.Error() != "redis: nil" {
 		return nil, errors.Wrap(err, "unexpected error looking for jwk in redis")
 	}
@@ -218,7 +218,7 @@ func (s *service) getSignatureKey(token *jwt.Token) (interface{}, error) {
 			return nil, errors.Wrap(err, "faile dto read jwk response body")
 		}
 
-		_, err = s.redis.Set(ctx, zrule.REDIS_CCP_JWKS, buf, time.Hour*24).Result()
+		_, err = s.redis.Set(ctx, zrule.CACHE_CCP_JWKS, buf, time.Hour*24).Result()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to cache jwks in redis")
 		}

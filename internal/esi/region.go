@@ -70,6 +70,8 @@ func (s *service) GetUniverseRegionsRegionID(ctx context.Context, id uint) (*zru
 			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 			return nil, m
 		}
+
+		region.ID = id
 	default:
 		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 	}

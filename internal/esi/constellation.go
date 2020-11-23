@@ -11,7 +11,7 @@ import (
 
 type constellationService interface {
 	GetUniverseConstellations(ctx context.Context) ([]uint, Meta)
-	GetUniverseConstealltionConstellationID(ctx context.Context, id uint) (*zrule.Constellation, Meta)
+	GetUniverseConstellationsConstellationID(ctx context.Context, id uint) (*zrule.Constellation, Meta)
 }
 
 func (s *service) GetUniverseConstellations(ctx context.Context) ([]uint, Meta) {
@@ -46,7 +46,7 @@ func (s *service) GetUniverseConstellations(ctx context.Context) ([]uint, Meta) 
 
 }
 
-func (s *service) GetUniverseConstealltionConstellationID(ctx context.Context, id uint) (*zrule.Constellation, Meta) {
+func (s *service) GetUniverseConstellationsConstellationID(ctx context.Context, id uint) (*zrule.Constellation, Meta) {
 
 	path := fmt.Sprintf("/v1/universe/constellations/%d/", id)
 
@@ -70,6 +70,9 @@ func (s *service) GetUniverseConstealltionConstellationID(ctx context.Context, i
 			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 			return nil, m
 		}
+
+		constellation.ID = id
+
 	default:
 		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 	}

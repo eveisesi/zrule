@@ -76,6 +76,8 @@ func (s *service) GetUniverseGroupsGroupID(ctx context.Context, id uint) (*zrule
 			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 			return nil, m
 		}
+
+		group.ID = id
 	default:
 		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 	}
@@ -142,6 +144,8 @@ func (s *service) GetUniverseTypesTypeID(ctx context.Context, id uint) (*zrule.I
 			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 			return nil, m
 		}
+
+		item.ID = id
 	default:
 		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 	}

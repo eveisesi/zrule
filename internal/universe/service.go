@@ -6,7 +6,7 @@ import (
 	"github.com/eveisesi/zrule"
 	"github.com/eveisesi/zrule/internal/esi"
 	"github.com/go-redis/redis/v8"
-	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type SearchResult struct {
@@ -15,9 +15,17 @@ type SearchResult struct {
 }
 
 type Service interface {
-	SearchName(ctx context.Context, category, term string) ([]*SearchResult, error)
+	SearchName(ctx context.Context, category, term string) ([]*zrule.SearchResult, error)
 
-	zrule.UniverseRepository
+	zrule.AllianceRepository
+	zrule.CorporationRepository
+	zrule.CharacterRepository
+	zrule.RegionRepository
+	zrule.ConstellationRepository
+	zrule.SolarSystemRepository
+
+	zrule.ItemRepository
+	zrule.ItemGroupRepository
 }
 
 type service struct {
@@ -26,16 +34,45 @@ type service struct {
 
 	esi esi.Service
 
-	zrule.UniverseRepository
+	zrule.AllianceRepository
+	zrule.CorporationRepository
+	zrule.CharacterRepository
+	zrule.RegionRepository
+	zrule.ConstellationRepository
+	zrule.SolarSystemRepository
+
+	zrule.ItemRepository
+	zrule.ItemGroupRepository
 }
 
-func NewService(redis *redis.Client, newrelic *newrelic.Application, esi esi.Service, universe zrule.UniverseRepository) Service {
+func NewService(
+	redis *redis.Client,
+	newrelic *newrelic.Application,
+	esi esi.Service,
+
+	alliance zrule.AllianceRepository,
+	corporation zrule.CorporationRepository,
+	character zrule.CharacterRepository,
+	region zrule.RegionRepository,
+	constellation zrule.ConstellationRepository,
+	solarSystem zrule.SolarSystemRepository,
+
+	item zrule.ItemRepository,
+	itemGroup zrule.ItemGroupRepository,
+) Service {
 	return &service{
 		redis:    redis,
 		newrelic: newrelic,
 
 		esi: esi,
 
-		UniverseRepository: universe,
+		AllianceRepository:      alliance,
+		CorporationRepository:   corporation,
+		CharacterRepository:     character,
+		RegionRepository:        region,
+		ConstellationRepository: constellation,
+		SolarSystemRepository:   solarSystem,
+		ItemRepository:          item,
+		ItemGroupRepository:     itemGroup,
 	}
 }

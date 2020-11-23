@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/eveisesi/zrule"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
@@ -27,10 +28,13 @@ func (s *service) VerifyUserRegistrationByToken(ctx context.Context, bearer *oau
 	}
 
 	// Verify that we know who the character is
-	character, err := s.character.Character(ctx, userID)
+	character, err := s.universe.Character(ctx, userID)
 	if err != nil {
 		return err
 	}
+
+	spew.Dump(character)
+
 	owner, err := s.token.OwnerHashFromToken(ctx, token)
 	if err != nil {
 		return err

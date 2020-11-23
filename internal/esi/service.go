@@ -34,6 +34,7 @@ type (
 		itemService
 		regionService
 		solarSystemService
+		searchService
 	}
 	service struct {
 		client      *http.Client
@@ -233,7 +234,7 @@ func (s *service) retrieveErrorCount(ctx context.Context, h map[string]string) {
 	}
 
 	mx.Lock()
-	s.redis.Set(ctx, zrule.REDIS_ESI_ERROR_COUNT, count, 0)
+	s.redis.Set(ctx, zrule.CACHE_ESI_ERROR_COUNT, count, 0)
 	mx.Unlock()
 
 }
@@ -251,7 +252,7 @@ func (s *service) retrieveErrorReset(ctx context.Context, h map[string]string) {
 	}
 
 	mx.Lock()
-	s.redis.Set(ctx, zrule.REDIS_ESI_ERROR_RESET, time.Now().Add(time.Second*time.Duration(seconds)).Unix(), 0)
+	s.redis.Set(ctx, zrule.CACHE_ESI_ERROR_RESET, time.Now().Add(time.Second*time.Duration(seconds)).Unix(), 0)
 	mx.Unlock()
 
 }
@@ -263,15 +264,15 @@ func (s *service) trackESICallStatusCode(ctx context.Context, code int) {
 
 	switch n := code; {
 	case n == http.StatusOK:
-		s.redis.ZAdd(ctx, zrule.REDIS_ESI_TRACKING_OK, &input)
+		s.redis.ZAdd(ctx, zrule.CACHE_ESI_TRACKING_OK, &input)
 	case n == http.StatusNotModified:
-		s.redis.ZAdd(ctx, zrule.REDIS_ESI_TRACKING_NOT_MODIFIED, &input)
+		s.redis.ZAdd(ctx, zrule.CACHE_ESI_TRACKING_NOT_MODIFIED, &input)
 	case n == 420:
-		s.redis.ZAdd(ctx, zrule.REDIS_ESI_TRACKING_CALM_DOWN, &input)
+		s.redis.ZAdd(ctx, zrule.CACHE_ESI_TRACKING_CALM_DOWN, &input)
 	case n >= 400 && n < 500:
-		s.redis.ZAdd(ctx, zrule.REDIS_ESI_TRACKING_4XX, &input)
+		s.redis.ZAdd(ctx, zrule.CACHE_ESI_TRACKING_4XX, &input)
 	case n >= 500:
-		s.redis.ZAdd(ctx, zrule.REDIS_ESI_TRACKING_5XX, &input)
+		s.redis.ZAdd(ctx, zrule.CACHE_ESI_TRACKING_5XX, &input)
 	}
 
 }

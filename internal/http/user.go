@@ -12,7 +12,7 @@ func (s *server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	character, err := s.character.Character(ctx, user.CharacterID)
+	character, err := s.universe.Character(ctx, user.CharacterID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

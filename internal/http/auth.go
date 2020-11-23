@@ -39,8 +39,8 @@ func (s *server) handleGetAuthLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenKey := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_TOKEN, state)
-	attemptKey := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, state)
+	tokenKey := fmt.Sprintf(zrule.CACHE_ZRULE_AUTH_TOKEN, state)
+	attemptKey := fmt.Sprintf(zrule.CACHE_ZRULE_AUTH_ATTEMPT, state)
 	token, err := s.redis.Get(ctx, tokenKey).Result()
 	if err != nil && err.Error() != "redis: nil" {
 		s.logger.WithError(err).WithField("key", tokenKey).Error("unexpected error encountered from redis")
@@ -79,7 +79,7 @@ func (s *server) handlePostAuthLogin(w http.ResponseWriter, r *http.Request) {
 	h := hmac.New(sha256.New, nil)
 	_, _ = h.Write([]byte(time.Now().String()))
 	hash := fmt.Sprintf("%x", h.Sum(nil))
-	key := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, hash)
+	key := fmt.Sprintf(zrule.CACHE_ZRULE_AUTH_ATTEMPT, hash)
 	duration := time.Minute * 5
 	s.redis.Set(ctx, key, true, duration)
 
@@ -100,7 +100,7 @@ func (s *server) handleGetAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_ATTEMPT, state)
+	key := fmt.Sprintf(zrule.CACHE_ZRULE_AUTH_ATTEMPT, state)
 	exists, err := s.redis.Exists(ctx, key).Result()
 	if err != nil && err.Error() != "redis: nil" {
 		s.logger.WithError(err).WithField("key", key).Error("unexpected error encountered from redis")
@@ -132,7 +132,7 @@ func (s *server) handleGetAuthCallback(w http.ResponseWriter, r *http.Request) {
 
 	s.redis.Set(
 		ctx,
-		fmt.Sprintf(zrule.REDIS_ZRULE_AUTH_TOKEN, state),
+		fmt.Sprintf(zrule.CACHE_ZRULE_AUTH_TOKEN, state),
 		bearer.AccessToken,
 		time.Minute*5,
 	)

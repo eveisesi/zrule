@@ -16,9 +16,9 @@ type service struct {
 	zrule.PolicyRepository
 }
 
-func NewService(action zrule.PolicyRepository) Service {
+func NewService(policy zrule.PolicyRepository) Service {
 	return &service{
-		PolicyRepository: action,
+		PolicyRepository: policy,
 	}
 }
 

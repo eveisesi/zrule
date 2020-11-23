@@ -68,6 +68,8 @@ func (s *service) GetUniverseSolarSystemsSolarSystemID(ctx context.Context, id u
 			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
 			return nil, m
 		}
+
+		solarSystem.ID = id
 	default:
 		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
 	}

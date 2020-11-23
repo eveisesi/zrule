@@ -33,7 +33,7 @@ type Character struct {
 
 type ConstellationRepository interface {
 	Constellation(ctx context.Context, id uint) (*Constellation, error)
-	CreateConstellation(ctx context.Context, id uint) (*Constellation, error)
+	CreateConstellation(ctx context.Context, constellation *Constellation) (*Constellation, error)
 }
 
 // Constellation is an object representing the database table.

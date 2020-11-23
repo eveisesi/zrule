@@ -16,7 +16,7 @@ type allianceRepository struct {
 	c *mongo.Collection
 }
 
-func NewRepository(db *mongo.Database) (zrule.AllianceRepository, error) {
+func NewAllianceRepository(db *mongo.Database) (zrule.AllianceRepository, error) {
 
 	alliances := db.Collection("alliances")
 

@@ -32,11 +32,11 @@ func NewCharacterRepository(d *mongo.Database) (zrule.CharacterRepository, error
 
 func (r *characterRepository) Character(ctx context.Context, id uint64) (*zrule.Character, error) {
 
-	character := zrule.Character{}
+	character := new(zrule.Character)
 
-	err := r.characters.FindOne(ctx, primitive.D{primitive.E{Key: "id", Value: id}}).Decode(&character)
+	err := r.characters.FindOne(ctx, primitive.D{primitive.E{Key: "id", Value: id}}).Decode(character)
 
-	return &character, err
+	return character, err
 
 }
 
@@ -51,6 +51,7 @@ func (r *characterRepository) CreateCharacter(ctx context.Context, character *zr
 			return nil, err
 		}
 	}
+
 	return character, nil
 
 }

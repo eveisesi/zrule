@@ -19,7 +19,7 @@ type userRepository struct {
 func NewUserRepository(d *mongo.Database) (zrule.UserRepository, error) {
 
 	users := d.Collection("users")
-	_, err := users.Indexes().CreateOne(context.Background(), mongo.IndexModel{Keys: bsonx.Doc{{Key: "characterID", Value: bsonx.Int32(1)}}, Options: &options.IndexOptions{Name: newString("uniqueCharacter"), Unique: newBool(true)}})
+	_, err := users.Indexes().CreateOne(context.Background(), mongo.IndexModel{Keys: bsonx.Doc{{Key: "character_id", Value: bsonx.Int32(1)}}, Options: &options.IndexOptions{Name: newString("uniqueCharacter"), Unique: newBool(true)}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize user repository. Error encountered configured collection indexes: %w", err)
 	}
@@ -31,7 +31,7 @@ func NewUserRepository(d *mongo.Database) (zrule.UserRepository, error) {
 
 func (r *userRepository) User(ctx context.Context, id uint64) (*zrule.User, error) {
 	user := new(zrule.User)
-	err := r.users.FindOne(ctx, primitive.D{primitive.E{Key: "characterID", Value: id}}).Decode(user)
+	err := r.users.FindOne(ctx, primitive.D{primitive.E{Key: "character_id", Value: id}}).Decode(user)
 
 	return user, err
 }
