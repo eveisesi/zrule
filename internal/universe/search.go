@@ -20,15 +20,11 @@ var ValidSearchCategories = map[string]string{
 	"item":          "inventory_type",
 }
 
-func (s *service) SearchName(ctx context.Context, category, term string) ([]*zrule.SearchResult, error) {
+func (s *service) SearchName(ctx context.Context, category, term string, strict bool) ([]*zrule.SearchResult, error) {
 
-	ids, m := s.esi.GetSearch(ctx, category, term, false)
+	ids, m := s.esi.GetSearch(ctx, category, term, strict)
 	if m.IsErr() {
 		return nil, m.Msg
-	}
-
-	if len(ids) > 25 {
-		ids = ids[0:24]
 	}
 
 	wg := &sync.WaitGroup{}

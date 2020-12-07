@@ -15,7 +15,7 @@ type SearchResult struct {
 }
 
 type Service interface {
-	SearchName(ctx context.Context, category, term string) ([]*zrule.SearchResult, error)
+	SearchName(ctx context.Context, category, term string, strict bool) ([]*zrule.SearchResult, error)
 
 	zrule.AllianceRepository
 	zrule.CorporationRepository
