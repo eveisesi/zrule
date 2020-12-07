@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/eveisesi/zrule/pkg/ruler"
-
 	"github.com/eveisesi/zrule"
+	"github.com/eveisesi/zrule/pkg/ruler"
 	"github.com/go-chi/chi"
+	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -99,12 +99,12 @@ func (s *server) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
 
 	policy.OwnerID = user.ID
 
-	// if len(policy.Actions) == 0 {
-	// 	msg := "Policies are required to have at least one action associated with them when they are created"
-	// 	s.logger.Error(msg)
-	// 	s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-	// 	return
-	// }
+	if len(policy.Actions) == 0 {
+		msg := "Policies are required to have at least one action associated with them when they are created"
+		s.logger.Error(msg)
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
+		return
+	}
 
 	policy, err = s.policy.CreatePolicy(ctx, policy)
 	if err != nil {
@@ -186,7 +186,19 @@ func (s *server) handleUpdatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ruler.Validate(policy.Rules)
+	rulerRules := make([][]*ruler.Rule, len(policy.Rules))
+
+	for i, or := range policy.Rules {
+		rulerRulesInner := make([]*ruler.Rule, 0)
+		err = copier.Copy(&rulerRulesInner, &or)
+		if err != nil {
+			s.writeError(w, http.StatusBadRequest, err)
+			return
+		}
+		rulerRules[i] = rulerRulesInner
+	}
+
+	err = ruler.Validate(rulerRules)
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return

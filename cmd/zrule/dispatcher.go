@@ -11,22 +11,27 @@ import (
 func dispatcherCommand(c *cli.Context) {
 	basics := basics("dispatcher")
 
-	policyRepo, err := mdb.NewPolicyRepository(basics.db)
-	if err != nil {
-		basics.logger.WithError(err).Fatal("failed to initialize policyRepository")
-	}
-
+	// Initialize Repositories
 	actionRepo, err := mdb.NewActionRepository(basics.db)
 	if err != nil {
 		basics.logger.WithError(err).Fatal("failed to initialize actionRepo")
 	}
+
+	basics.logger.Info("actionRepo initialized")
+
+	policyRepo, err := mdb.NewPolicyRepository(basics.db)
+	if err != nil {
+		basics.logger.WithError(err).Fatal("failed to initialize policyRepo")
+	}
+
+	basics.logger.Info("policyRepo initialized")
 
 	err = dispatcher.NewService(
 		basics.redis,
 		basics.logger,
 		basics.newrelic,
 		basics.client,
-		policy.NewService(policyRepo),
+		policy.NewService(newUniverseService(basics), policyRepo),
 		action.NewService(actionRepo),
 	).Run()
 	if err != nil {

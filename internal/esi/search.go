@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type searchService interface {
@@ -16,9 +19,14 @@ type searchService interface {
 
 func (s *service) GetSearch(ctx context.Context, category, term string, strict bool) ([]uint64, Meta) {
 
+	// Search endpoint doesn't like the term capsule, and this will be highly requested
+	if strings.Contains("capsule", strings.ToLower(term)) {
+		return []uint64{670}, Meta{}
+	}
+
 	query := url.Values{}
 	query.Set("categories", category)
-	query.Set("search", term)
+	query.Set("search", strings.ToLower(term))
 
 	strStrict := "false"
 	if strict {
@@ -68,7 +76,9 @@ func (s *service) GetSearch(ctx context.Context, category, term string, strict b
 		return nil, m
 	}
 
+	spew.Dump(results)
 	if _, ok := results[category]; !ok {
+		spew.Dump(m)
 		m.Msg = fmt.Errorf("response does not contain results for specified category: %w", m.Msg)
 		return nil, m
 	}

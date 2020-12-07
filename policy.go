@@ -26,16 +26,23 @@ type Policy struct {
 	ID        primitive.ObjectID   `bson:"_id,omitempty" json:"_id,omitempty"`
 	Name      string               `bson:"name" json:"name"`
 	OwnerID   primitive.ObjectID   `bson:"owner_id" json:"owner_id"`
-	Rules     [][]*ruler.Rule      `bson:"rules" json:"rules"`
+	Rules     [][]*Rule            `bson:"rules" json:"rules"`
 	Actions   []primitive.ObjectID `bson:"actions" json:"actions"`
 	CreatedAt time.Time            `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time            `bson:"updated_at" json:"updated_at"`
 }
 
+type Rule struct {
+	Comparator string          `bson:"comparator" json:"comparator"`
+	Path       Path            `bson:"path" json:"path"`
+	Values     []interface{}   `bson:"values" json:"values"`
+	Entities   []*SearchResult `bson:"-" json:"entities"`
+}
+
 type PathObj struct {
 	Display     string             `json:"display"`
 	Description string             `json:"description"`
-	Category    string             `json:"category,omitempty"`
+	Category    PathCategory       `json:"category,omitempty"`
 	Searchable  bool               `json:"searchable"`
 	Format      string             `json:"format"`
 	Path        Path               `json:"path"`
@@ -52,7 +59,7 @@ var (
 		Searchable:  true,
 		Format:      "string",
 		Path:        Path("solar_system_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathZKBNPC = PathObj{
 		Display:     "ZKillboard Is NPC",
@@ -101,7 +108,7 @@ var (
 		Format:      "string",
 		Category:    "alliance",
 		Path:        Path("victim.alliance_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathVictimCorporationID = PathObj{
 		Display:     "Victim Corporation",
@@ -110,7 +117,7 @@ var (
 		Format:      "string",
 		Category:    "corporation",
 		Path:        Path("victim.corporation_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathVictimCharacterID = PathObj{
 		Display:     "Victim Character",
@@ -128,16 +135,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("victim.ship_type_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
-	}
-	PathVictimItemsTypeID = PathObj{
-		Display:     "Victim Items",
-		Description: "The items that the victim pocessed",
-		Searchable:  true,
-		Format:      "string",
-		Category:    "item",
-		Path:        Path("victim.items.item_type_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerAllianceID = PathObj{
 		Display:     "Attacker Alliance",
@@ -173,7 +171,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("attackers.ship_type_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerWeaponTypeID = PathObj{
 		Display:     "Attacker Weapon",
@@ -182,7 +180,7 @@ var (
 		Format:      "string",
 		Category:    "item",
 		Path:        Path("attackers.weapon_type_id"),
-		Comparators: []ruler.Comparator{ruler.EQ},
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 )
 
@@ -197,7 +195,7 @@ var AllPaths = []PathObj{
 	PathVictimCorporationID,
 	PathVictimCharacterID,
 	PathVictimShipTypeID,
-	PathVictimItemsTypeID,
+	// PathVictimItemsTypeID,
 	PathAttackerAllianceID,
 	PathAttackerCorporationID,
 	PathAttackerCharacterID,
@@ -215,6 +213,37 @@ func (p Path) IsValid() bool {
 }
 
 func (p Path) String() string {
+	return string(p)
+}
+
+type PathCategory string
+
+const (
+	PathCategoryAlliance      PathCategory = "alliance"
+	PathCategoryCorporation   PathCategory = "corporation"
+	PathCategoryCharacter     PathCategory = "character"
+	PathCategoryRegion        PathCategory = "region"
+	PathCategoryConstellation PathCategory = "constellation"
+	PathCategorySystem        PathCategory = "system"
+	PathCategoryItem          PathCategory = "item"
+)
+
+var AllPathCategories = []PathCategory{
+	PathCategoryAlliance, PathCategoryCorporation, PathCategoryCharacter,
+	PathCategoryRegion, PathCategoryConstellation, PathCategorySystem,
+	PathCategoryItem,
+}
+
+func (p PathCategory) IsValid() bool {
+	for _, v := range AllPathCategories {
+		if v == p {
+			return true
+		}
+	}
+	return false
+}
+
+func (p PathCategory) String() string {
 	return string(p)
 }
 

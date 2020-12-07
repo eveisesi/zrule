@@ -11,6 +11,7 @@ import (
 	"github.com/eveisesi/zrule/internal/action"
 	"github.com/eveisesi/zrule/internal/discord"
 	"github.com/eveisesi/zrule/internal/policy"
+	"github.com/eveisesi/zrule/internal/rest"
 	"github.com/eveisesi/zrule/internal/slack"
 	"github.com/go-redis/redis/v8"
 	"github.com/newrelic/go-agent/v3/newrelic"
@@ -19,6 +20,7 @@ import (
 
 type Service interface {
 	Run() error
+	SendTestMessage(ctx context.Context, action *zrule.Action, message string) error
 }
 
 type service struct {
@@ -151,6 +153,26 @@ func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
 }
 
+func (s *service) SendTestMessage(ctx context.Context, action *zrule.Action, message string) error {
+
+	platform, err := s.serviceForPlatform(action)
+	if err != nil {
+		newrelic.FromContext(ctx).NoticeError(err)
+		s.logger.WithError(err).Error("failed to lookup action")
+		return err
+	}
+
+	err = platform.SendTest(ctx, message)
+	if err != nil {
+		newrelic.FromContext(ctx).NoticeError(err)
+		s.logger.WithError(err).Error("failed to send message")
+		return err
+	}
+
+	return nil
+
+}
+
 func (s *service) serviceForPlatform(action *zrule.Action) (zrule.Dispatcher, error) {
 	switch action.Platform {
 	case zrule.PlatformDiscord:
@@ -158,8 +180,7 @@ func (s *service) serviceForPlatform(action *zrule.Action) (zrule.Dispatcher, er
 	case zrule.PlatformSlack:
 		return slack.NewService(action, s.client)
 	case zrule.PlatformRest:
-		fallthrough
-		// return rest.NewService(action, s.client)
+		return rest.NewService(action, s.client)
 	default:
 		return nil, fmt.Errorf("unknown platform specified")
 	}

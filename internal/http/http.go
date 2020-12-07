@@ -11,6 +11,7 @@ import (
 	"github.com/eveisesi/zrule/pkg/ruler"
 
 	"github.com/eveisesi/zrule/internal/action"
+	"github.com/eveisesi/zrule/internal/dispatcher"
 	"github.com/eveisesi/zrule/internal/policy"
 	"github.com/eveisesi/zrule/internal/token"
 	"github.com/eveisesi/zrule/internal/universe"
@@ -30,11 +31,12 @@ type server struct {
 	redis    *redis.Client
 	newrelic *newrelic.Application
 
-	token    token.Service
-	user     user.Service
-	action   action.Service
-	policy   policy.Service
-	universe universe.Service
+	token      token.Service
+	user       user.Service
+	action     action.Service
+	policy     policy.Service
+	universe   universe.Service
+	dispatcher dispatcher.Service
 
 	server *http.Server
 }
@@ -50,19 +52,21 @@ func NewServer(
 	action action.Service,
 	policy policy.Service,
 	universe universe.Service,
+	dispatcher dispatcher.Service,
 ) *server {
 
 	s := &server{
-		port:     port,
-		db:       db,
-		logger:   logger,
-		redis:    redis,
-		newrelic: newrelic,
-		token:    token,
-		user:     user,
-		action:   action,
-		policy:   policy,
-		universe: universe,
+		port:       port,
+		db:         db,
+		logger:     logger,
+		redis:      redis,
+		newrelic:   newrelic,
+		token:      token,
+		user:       user,
+		action:     action,
+		policy:     policy,
+		universe:   universe,
+		dispatcher: dispatcher,
 	}
 
 	s.server = &http.Server{
@@ -123,9 +127,12 @@ func (s *server) buildRouter() *chi.Mux {
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/policies", s.handleCreatePolicy))
 			r.Patch(newrelic.WrapHandleFunc(s.newrelic, "/policies/{policyID}", s.handleUpdatePolicy))
 			r.Delete(newrelic.WrapHandleFunc(s.newrelic, "/policies/{policyID}", s.handleDeletePolicy))
+
 			r.Get(newrelic.WrapHandleFunc(s.newrelic, "/actions", s.handleGetActions))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/actions", s.handleCreateAction))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}/test", s.handlePostActionTest))
+			r.Patch(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}", s.handleUpdateAction))
+			r.Delete(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}", s.handleDeleteAction))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/rules/validate", s.handlePostValidateRules))
 
 			r.Get(newrelic.WrapHandleFunc(s.newrelic, "/search", s.handleGetSearchName))
@@ -186,7 +193,7 @@ func (s *server) writeError(w http.ResponseWriter, code int, err error) {
 	// If err is not nil, actually pass in a map so that the output to the wire is {"error": "text...."} else just let it fall through
 	if err != nil {
 		s.writeResponse(w, code, map[string]interface{}{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}

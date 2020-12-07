@@ -45,7 +45,7 @@ func (a *Action) IsValid() error {
 	switch uri.Host {
 	case HostSlack.String():
 		a.Platform = PlatformSlack
-	case HostDiscord.String():
+	case HostDiscord.String(), HostDiscordApp.String():
 		a.Platform = PlatformDiscord
 	default:
 		a.Platform = PlatformRest
@@ -63,7 +63,8 @@ func (a *Action) IsValid() error {
 type Host string
 
 const HostSlack Host = "hooks.slack.com"
-const HostDiscord Host = "discordapp.com"
+const HostDiscordApp Host = "discordapp.com"
+const HostDiscord Host = "discord.com"
 
 func (h Host) String() string {
 	return string(h)

@@ -16,11 +16,13 @@ func processorCommand(c *cli.Context) {
 		basics.logger.WithError(err).Fatal("failed to initialize policyRepository")
 	}
 
+	basics.logger.Info("policyRepo initialized")
+
 	err = processor.NewService(
 		basics.redis,
 		basics.logger,
 		basics.newrelic,
-		policy.NewService(policyRepo),
+		policy.NewService(newUniverseService(basics), policyRepo),
 	).Run(5)
 	if err != nil {
 		basics.logger.WithError(err).Fatal("failed to start processor service")
