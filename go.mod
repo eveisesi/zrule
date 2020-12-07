@@ -5,13 +5,9 @@ go 1.15
 require (
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/ddouglas/ruler v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/friendsofgo/errors v0.9.2 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
-	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.3.3
-	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/copier v0.0.0-20201025035756-632e723a6687
 	github.com/joho/godotenv v1.3.0
@@ -23,11 +19,7 @@ require (
 	github.com/newrelic/go-agent/v3/integrations/logcontext/nrlogrusplugin v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
-	github.com/slack-go/slack v0.7.2
 	github.com/urfave/cli v1.22.4
-	github.com/volatiletech/inflect v0.0.1 // indirect
-	github.com/volatiletech/null v8.0.0+incompatible
-	github.com/volatiletech/sqlboiler v3.7.1+incompatible // indirect
 	go.mongodb.org/mongo-driver v1.4.2
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
