@@ -44,6 +44,14 @@ func (s *server) handleGetSearchName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var useStrict bool
+	strict := r.URL.Query().Get("strict")
+	if strict != "" {
+		if strict == "true" {
+			useStrict = true
+		}
+	}
+
 	var valid bool
 	for i, v := range universe.ValidSearchCategories {
 		if category == i {
@@ -58,7 +66,7 @@ func (s *server) handleGetSearchName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	results, err := s.universe.SearchName(ctx, category, term)
+	results, err := s.universe.SearchName(ctx, category, term, useStrict)
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
