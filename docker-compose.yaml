@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+    zrule-http:
+        image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
+        network_mode: "host"
+        restart: always
+        command: ./zrule http
+        container_name: serve
+        hostname: serve

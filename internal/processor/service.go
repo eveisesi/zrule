@@ -109,15 +109,6 @@ func (s *service) Run(limit int64) error {
 		var ctx = context.Background()
 		txn := s.newrelic.StartTransaction("killmail queue check")
 
-		if s.trackers.expiresAt.Before(time.Now()) {
-			err := s.initializeTracker(ctx)
-			if err != nil {
-				err = fmt.Errorf("failed to initialize trackers: %w", err)
-				s.logger.WithError(err).Errorln()
-				return err
-			}
-		}
-
 		restart, err := s.redis.Get(ctx, zrule.QUEUE_RESTART_TRACKER).Int64()
 		if err != nil {
 			s.logger.WithError(err).Error("restart flag is missing. attempting to create with default value of 0")
@@ -126,6 +117,27 @@ func (s *service) Run(limit int64) error {
 				txn.NoticeError(err)
 				s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
 			}
+			continue
+		}
+
+		if s.trackers.expiresAt.Before(time.Now()) {
+			err := s.initializeTracker(ctx)
+			if err != nil {
+				err = fmt.Errorf("failed to initialize trackers: %w", err)
+				s.logger.WithError(err).Errorln()
+				return err
+			}
+
+			if restart == 1 {
+				_, err = s.redis.Set(ctx, zrule.QUEUE_RESTART_TRACKER, 0, 0).Result()
+				if err != nil {
+					txn.NoticeError(err)
+					s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
+				}
+
+			}
+			time.Sleep(time.Second * 5)
+			txn.Ignore()
 			continue
 		}
 

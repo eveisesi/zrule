@@ -303,5 +303,13 @@ func (s *server) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = s.redis.Set(ctx, zrule.QUEUE_RESTART_TRACKER, 1, 0).Result()
+	if err != nil {
+		msg := "error encountered attempting to create stop flag with default value"
+		s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
+		s.writeError(w, http.StatusInternalServerError, fmt.Errorf(msg))
+		return
+	}
+
 	s.writeResponse(w, http.StatusNoContent, nil)
 }
