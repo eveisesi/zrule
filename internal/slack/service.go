@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -55,14 +56,14 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 		return fmt.Errorf("failed to execute request to slack: %w", err)
 	}
 
-	// if res.StatusCode != http.StatusOK {
-	// 	defer res.Body.Close()
-	// 	data, err := ioutil.ReadAll(res.Body)
-	// 	if err != nil {
-	// 		return fmt.Errorf("failed to decode error response: %w", err)
-	// 	}
+	if res.StatusCode != http.StatusOK {
+		defer res.Body.Close()
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("failed to decode error response: %w", err)
+		}
 
-	// }
+	}
 
 	return nil
 }
@@ -72,6 +73,30 @@ func (s *service) SendTest(ctx context.Context, message string) error {
 	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send slack test message")
 	defer seg.End()
 
-	fmt.Println("Slack Test", message)
+	data, err := json.Marshal(map[string]interface{}{
+		"text": message,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to prepare request body to post to slack: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.webhook, bytes.NewBuffer(data))
+	if err != nil {
+		return fmt.Errorf("failed to prepare request to slack: %w", err)
+	}
+
+	_, err = s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to execute request to slack: %w", err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		defer res.Body.Close()
+		data, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("failed to decode error response: %w", err)
+		}
+
+	}
 	return nil
 }

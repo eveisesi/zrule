@@ -11,5 +11,3 @@ RUN apk --no-cache add tzdata ca-certificates
 COPY --from=builder /app/zrule .
 
 LABEL maintainer="David Douglas <david@onetwentyseven.dev>"
-
-EXPOSE 3000
