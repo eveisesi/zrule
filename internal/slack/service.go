@@ -51,7 +51,7 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 		return fmt.Errorf("failed to prepare request to slack: %w", err)
 	}
 
-	_, err = s.client.Do(req)
+	res, err := s.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to execute request to slack: %w", err)
 	}
@@ -62,6 +62,8 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 		if err != nil {
 			return fmt.Errorf("failed to decode error response: %w", err)
 		}
+
+		return fmt.Errorf("invalid response code received from slack: %s", string(data))
 
 	}
 
@@ -85,7 +87,7 @@ func (s *service) SendTest(ctx context.Context, message string) error {
 		return fmt.Errorf("failed to prepare request to slack: %w", err)
 	}
 
-	_, err = s.client.Do(req)
+	res, err := s.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to execute request to slack: %w", err)
 	}
@@ -96,6 +98,8 @@ func (s *service) SendTest(ctx context.Context, message string) error {
 		if err != nil {
 			return fmt.Errorf("failed to decode error response: %w", err)
 		}
+
+		return fmt.Errorf("invalid response code received from slack: %s", string(data))
 
 	}
 	return nil

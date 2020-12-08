@@ -1,2 +1,3 @@
-cmd/zrule/.env
+!cmd/zrule/*.go
+zrule 
 logs/*.log
