@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type searchService interface {
@@ -76,9 +74,7 @@ func (s *service) GetSearch(ctx context.Context, category, term string, strict b
 		return nil, m
 	}
 
-	spew.Dump(results)
 	if _, ok := results[category]; !ok {
-		spew.Dump(m)
 		m.Msg = fmt.Errorf("response does not contain results for specified category: %w", m.Msg)
 		return nil, m
 	}
