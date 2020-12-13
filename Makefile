@@ -29,9 +29,11 @@ dockercompdown:
 	docker-compose down
 
 prod:
+	git stash
 	git checkout --orphan dist
 	git --work-tree .dist add --all
 	git --work-tree .dist commit -m "dist"
 	git push origin HEAD:dist --force
 	git checkout -f main
 	git branch -D dist
+	git stash pop
