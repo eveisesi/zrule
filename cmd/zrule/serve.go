@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func httpCommand(c *cli.Context) {
+func serveCommand(c *cli.Context) {
 
 	basics := basics("http")
 

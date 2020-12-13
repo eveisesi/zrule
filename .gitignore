@@ -1,3 +1,4 @@
-!cmd/zrule/*.go
-zrule 
+.dist
+zrule-api
 logs/*.log
+.env

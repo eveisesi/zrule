@@ -1,14 +1,29 @@
 build:
-	go build -o zrule cmd/zrule/*.go
+	go build -o zrule-api cmd/zrule/*.go
 
-http: build
-	./zrule http
+serve: build
+	./zrule-api serve
 
 processor: build
-	./zrule processor
+	./zrule-api processor
 
 listener: build
-	./zrule listener
+	./zrule-api listener
 
 dispatcher: build
-	./zrule dispatcher
+	./zrule-api dispatcher
+
+docker: dockerbuild
+dockerbuild:
+	docker build . -t zrule:latest
+
+
+dockercomp: dockercompup dockercomplogs
+dockercompup:
+	docker-compose up -d --remove-orphans
+
+dockercomplogs:
+	docker-compose logs -f serve
+
+dockercompdown:
+	docker-compose down

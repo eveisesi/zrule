@@ -24,6 +24,7 @@ type config struct {
 		Pass     string
 		Name     string
 		AuthMech string `default:"SCRAM-SHA-1"`
+		Sleep    int    `default:"5"`
 	}
 
 	Redis struct {
@@ -32,8 +33,8 @@ type config struct {
 	}
 
 	NewRelic struct {
-		AppName    string `envconfig:"NEW_RELIC_APP_NAME"`
-		DevEnabled bool
+		Enabled bool   `envconfig:"NEW_RELIC_ENABLED" default:"false"`
+		AppName string `envconfig:"NEW_RELIC_APP_NAME"`
 	}
 
 	Env environment
@@ -73,12 +74,15 @@ func (c config) validateEnvironment() bool {
 }
 
 func loadConfig() (cfg config, err error) {
-	_ = godotenv.Load("./cmd/zrule/.env")
+	_ = godotenv.Load(".env")
 
 	err = envconfig.Process("", &cfg)
+	if err != nil {
+		return config{}, err
+	}
 
 	if !cfg.validateEnvironment() {
-		return config{}, fmt.Errorf("invalid env declared")
+		return config{}, fmt.Errorf("invalid env %s declared", cfg.Env)
 	}
 
 	return

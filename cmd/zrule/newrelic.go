@@ -28,9 +28,7 @@ func configNRApplication(cfg config, logger *logrus.Logger) (app *newrelic.Appli
 	opts = append(opts, newrelic.ConfigAppName(appName))
 	opts = append(opts, newrelic.ConfigInfoLogger(logger.Writer()))
 	opts = append(opts, func(c *newrelic.Config) {
-		if cfg.Env == production || cfg.NewRelic.DevEnabled {
-			c.Enabled = true
-		}
+		c.Enabled = cfg.Env == production || cfg.NewRelic.Enabled
 	})
 
 	app, err = newrelic.NewApplication(opts...)

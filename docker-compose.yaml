@@ -1,10 +1,65 @@
 version: "3.7"
 
 services:
-    zrule-http:
-        image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
-        network_mode: "host"
-        restart: always
-        command: ./zrule http
+    serve:
+        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
+        image: zrule:latest
+        env_file: .env
+        command: ./zrule serve
         container_name: serve
         hostname: serve
+        depends_on:
+            - mongodb
+            - redis
+        ports:
+            - 42000:3000
+    dispatcher:
+        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
+        image: zrule:latest
+        env_file: .env
+        command: ./zrule dispatcher
+        container_name: dispatcher
+        hostname: dispatcher
+        depends_on:
+            - mongodb
+            - redis
+    listener:
+        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
+        image: zrule:latest
+        env_file: .env
+        command: ./zrule listener
+        container_name: listener
+        hostname: listener
+        depends_on:
+            - mongodb
+            - redis
+    processor:
+        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
+        image: zrule:latest
+        env_file: .env
+        command: ./zrule processor
+        container_name: processor
+        hostname: processor
+        depends_on:
+            - mongodb
+            - redis
+    mongodb:
+        build:
+            context: ./scripts/mongo
+            dockerfile: Dockerfile
+        restart: always
+        container_name: mongodb
+        volumes:
+            - ./scripts/mongo/data/:/data/db
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=
+            - MONGO_INITDB_ROOT_PASSWORD=
+            - MONGO_INITDB_DATABASE=zrule
+        ports:
+            - "27018:27017"
+    redis:
+        image: redis:6.0.9
+        restart: always
+        container_name: redis
+        volumes:
+            - ./scripts/redis/data/:/data

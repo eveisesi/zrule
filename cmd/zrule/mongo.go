@@ -14,7 +14,7 @@ import (
 func makeMongoDB(cfg config) (*mongo.Database, error) {
 
 	q := url.Values{}
-	q.Set("authMechanism", cfg.Mongo.AuthMech)
+	// q.Set("authMechanism", cfg.Mongo.AuthMech)
 	q.Set("maxIdleTimeMS", strconv.FormatInt(int64(time.Second*10), 10))
 	q.Set("connectTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
 	q.Set("serverSelectionTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
@@ -27,14 +27,29 @@ func makeMongoDB(cfg config) (*mongo.Database, error) {
 		RawQuery: q.Encode(),
 	}
 
-	mc, err := mdb.Connect(context.TODO(), c)
-	if err != nil {
-		return nil, err
+	if cfg.Mongo.Sleep > 0 {
+		time.Sleep(time.Second * time.Duration(cfg.Mongo.Sleep))
 	}
 
-	err = mc.Ping(context.TODO(), nil)
+	var mc *mongo.Client
+	var err error
+	for i := 0; i < 3; i++ {
+		mc, err = mdb.Connect(context.TODO(), c)
+		if err != nil {
+			fmt.Println("failed to connect to mongo, sleep and continue")
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		err = mc.Ping(context.TODO(), nil)
+		if err != nil {
+			fmt.Println("failed to ping mongo, sleep and continue")
+			time.Sleep(time.Second * 5)
+			continue
+		}
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed ping mongo db server")
+		return nil, fmt.Errorf("failed ping mongo db server: %w", err)
 	}
 
 	mdb := mc.Database(cfg.Mongo.Name)

@@ -82,9 +82,9 @@ func main() {
 	app.UsageText = "zrule"
 	app.Commands = []cli.Command{
 		cli.Command{
-			Name:   "http",
+			Name:   "serve",
 			Usage:  "Initializes the http server that handle http requests to this application",
-			Action: httpCommand,
+			Action: serveCommand,
 		},
 		cli.Command{
 			Name:    "processor",
