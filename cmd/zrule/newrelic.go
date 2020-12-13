@@ -12,10 +12,6 @@ func configNRApplication(cfg config, logger *logrus.Logger) (app *newrelic.Appli
 
 	appName := cfg.NewRelic.AppName
 
-	if !cfg.NewRelic.DevEnabled {
-		return nil, nil
-	}
-
 	if cfg.Env != production {
 		appName = fmt.Sprintf("%s-%s", cfg.Env, appName)
 		if cfg.Developer.Name != "" {
