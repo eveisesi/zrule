@@ -8,11 +8,9 @@ services:
         command: ./zrule serve
         container_name: serve
         hostname: serve
-        depends_on:
-            - mongodb
-            - redis
+        network_mode: "host"
         ports:
-            - 42000:3000
+            - 50200:3000
     dispatcher:
         # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
         image: zrule:latest
@@ -20,9 +18,7 @@ services:
         command: ./zrule dispatcher
         container_name: dispatcher
         hostname: dispatcher
-        depends_on:
-            - mongodb
-            - redis
+        network_mode: "host"
     listener:
         # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
         image: zrule:latest
@@ -30,9 +26,7 @@ services:
         command: ./zrule listener
         container_name: listener
         hostname: listener
-        depends_on:
-            - mongodb
-            - redis
+        network_mode: "host"
     processor:
         # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
         image: zrule:latest
@@ -40,26 +34,4 @@ services:
         command: ./zrule processor
         container_name: processor
         hostname: processor
-        depends_on:
-            - mongodb
-            - redis
-    mongodb:
-        build:
-            context: ./scripts/mongo
-            dockerfile: Dockerfile
-        restart: always
-        container_name: mongodb
-        volumes:
-            - ./scripts/mongo/data/:/data/db
-        environment:
-            - MONGO_INITDB_ROOT_USERNAME=
-            - MONGO_INITDB_ROOT_PASSWORD=
-            - MONGO_INITDB_DATABASE=zrule
-        ports:
-            - "27018:27017"
-    redis:
-        image: redis:6.0.9
-        restart: always
-        container_name: redis
-        volumes:
-            - ./scripts/redis/data/:/data
+        network_mode: "host"

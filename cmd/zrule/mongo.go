@@ -20,9 +20,9 @@ func makeMongoDB(cfg config) (*mongo.Database, error) {
 	q.Set("serverSelectionTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
 	q.Set("socketTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
 	c := &url.URL{
-		Scheme:   "mongodb",
-		Host:     fmt.Sprintf("%s:%d", cfg.Mongo.Host, cfg.Mongo.Port),
-		User:     url.UserPassword(cfg.Mongo.User, cfg.Mongo.Pass),
+		Scheme: "mongodb",
+		Host:   fmt.Sprintf("%s:%d", cfg.Mongo.Host, cfg.Mongo.Port),
+		// User:     url.UserPassword(cfg.Mongo.User, cfg.Mongo.Pass),
 		Path:     fmt.Sprintf("/%s", cfg.Mongo.Name),
 		RawQuery: q.Encode(),
 	}
