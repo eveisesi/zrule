@@ -14,7 +14,7 @@ import (
 func makeMongoDB(cfg config) (*mongo.Database, error) {
 
 	q := url.Values{}
-	// q.Set("authMechanism", cfg.Mongo.AuthMech)
+	q.Set("authMechanism", cfg.Mongo.AuthMech)
 	q.Set("maxIdleTimeMS", strconv.FormatInt(int64(time.Second*10), 10))
 	q.Set("connectTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
 	q.Set("serverSelectionTimeoutMS", strconv.FormatInt(int64(time.Second*4), 10))
