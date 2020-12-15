@@ -2,8 +2,7 @@ version: "3.7"
 
 services:
     serve:
-        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
-        image: zrule:latest
+        image: ${IMAGE_URI}
         env_file: .env
         command: ./zrule serve
         container_name: serve
@@ -12,24 +11,21 @@ services:
         ports:
             - 50200:3000
     dispatcher:
-        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
-        image: zrule:latest
+        image: ${IMAGE_URI}
         env_file: .env
         command: ./zrule dispatcher
         container_name: dispatcher
         hostname: dispatcher
         network_mode: "host"
     listener:
-        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
-        image: zrule:latest
+        image: ${IMAGE_URI}
         env_file: .env
         command: ./zrule listener
         container_name: listener
         hostname: listener
         network_mode: "host"
     processor:
-        # image: docker.pkg.github.com/eveisesi/zrule/zrule-api:0.3.2
-        image: zrule:latest
+        image: ${IMAGE_URI}
         env_file: .env
         command: ./zrule processor
         container_name: processor
