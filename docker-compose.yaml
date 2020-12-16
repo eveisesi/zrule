@@ -8,8 +8,6 @@ services:
         container_name: serve
         hostname: serve
         network_mode: "host"
-        ports:
-            - 50200:3000
     dispatcher:
         image: ${IMAGE_URI}
         env_file: .env
