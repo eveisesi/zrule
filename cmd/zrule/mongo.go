@@ -27,29 +27,14 @@ func makeMongoDB(cfg config) (*mongo.Database, error) {
 		RawQuery: q.Encode(),
 	}
 
-	if cfg.Mongo.Sleep > 0 {
-		time.Sleep(time.Second * time.Duration(cfg.Mongo.Sleep))
-	}
-
-	var mc *mongo.Client
-	var err error
-	for i := 0; i < 3; i++ {
-		mc, err = mdb.Connect(context.TODO(), c)
-		if err != nil {
-			fmt.Println("failed to connect to mongo, sleep and continue")
-			time.Sleep(time.Second * 5)
-			continue
-		}
-
-		err = mc.Ping(context.TODO(), nil)
-		if err != nil {
-			fmt.Println("failed to ping mongo, sleep and continue")
-			time.Sleep(time.Second * 5)
-			continue
-		}
-	}
+	mc, err := mdb.Connect(context.TODO(), c)
 	if err != nil {
-		return nil, fmt.Errorf("failed ping mongo db server: %w", err)
+		return nil, fmt.Errorf("failed to connect to mongo, sleep and continue")
+	}
+
+	err = mc.Ping(context.TODO(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping mongo, sleep and continue")
 	}
 
 	mdb := mc.Database(cfg.Mongo.Name)
