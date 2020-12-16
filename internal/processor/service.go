@@ -68,7 +68,7 @@ func NewService(
 func (s *service) initializeTracker(ctx context.Context) error {
 	s.logger.Info("starting tracker initialization")
 	defer s.logger.Info("finishing tracker initialization")
-	policies, err := s.policy.Policies(ctx)
+	policies, err := s.policy.Policies(ctx, zrule.NewEqualOperator("paused", false))
 	if err != nil {
 		return err
 	}

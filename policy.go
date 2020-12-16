@@ -28,6 +28,7 @@ type Policy struct {
 	OwnerID   primitive.ObjectID   `bson:"owner_id" json:"owner_id"`
 	Rules     [][]*Rule            `bson:"rules" json:"rules"`
 	Actions   []primitive.ObjectID `bson:"actions" json:"actions"`
+	Paused    bool                 `bson:"paused" json:"paused"`
 	CreatedAt time.Time            `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time            `bson:"updated_at" json:"updated_at"`
 }
