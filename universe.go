@@ -32,6 +32,7 @@ type Character struct {
 }
 
 type ConstellationRepository interface {
+	Constellations(ctx context.Context, operators ...*Operator) ([]*Constellation, error)
 	Constellation(ctx context.Context, id uint) (*Constellation, error)
 	CreateConstellation(ctx context.Context, constellation *Constellation) (*Constellation, error)
 }
@@ -42,6 +43,7 @@ type Constellation struct {
 	Name      string    `bson:"name" json:"name"`
 	RegionID  uint      `bson:"region_id" json:"region_id"`
 	FactionID *int      `bson:"faction_id" json:"faction_id"`
+	Systems   []uint    `bson:"-" json:"systems,omitempty"`
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 
@@ -62,6 +64,7 @@ type Corporation struct {
 }
 
 type SolarSystemRepository interface {
+	SolarSystems(ctx context.Context, operators ...*Operator) ([]*SolarSystem, error)
 	SolarSystem(ctx context.Context, id uint) (*SolarSystem, error)
 	CreateSolarSystem(ctx context.Context, system *SolarSystem) (*SolarSystem, error)
 }
@@ -78,20 +81,23 @@ type SolarSystem struct {
 }
 
 type RegionRepository interface {
+	Regions(ctx context.Context, operators ...*Operator) ([]*Region, error)
 	Region(ctx context.Context, id uint) (*Region, error)
 	CreateRegion(ctx context.Context, region *Region) (*Region, error)
 }
 
 // Region is an object representing the database table.
 type Region struct {
-	ID        uint      `bson:"id" json:"id"`
-	Name      string    `bson:"name" json:"name"`
-	FactionID *uint     `bson:"faction_id" json:"faction_id"`
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+	ID             uint      `bson:"id" json:"id"`
+	Name           string    `bson:"name" json:"name"`
+	FactionID      *uint     `bson:"faction_id" json:"faction_id"`
+	Constellations []uint    `bson:"-" json:"constellations,omitempty"`
+	CreatedAt      time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 type ItemRepository interface {
+	Items(ctx context.Context, operators ...*Operator) ([]*Item, error)
 	Item(ctx context.Context, id uint) (*Item, error)
 	CreateItem(ctx context.Context, item *Item) (*Item, error)
 }
@@ -111,6 +117,7 @@ type Item struct {
 }
 
 type ItemGroupRepository interface {
+	ItemGroups(ctx context.Context, operators ...*Operator) ([]*ItemGroup, error)
 	ItemGroup(ctx context.Context, id uint) (*ItemGroup, error)
 	CreateItemGroup(ctx context.Context, group *ItemGroup) (*ItemGroup, error)
 }
@@ -121,6 +128,15 @@ type ItemGroup struct {
 	CategoryID uint      `bson:"category_id" json:"category_id"`
 	Name       string    `bson:"name" json:"name"`
 	Published  bool      `bson:"published" json:"published"`
+	Types      []uint    `bson:"-" json:"types,omitempty"`
 	CreatedAt  time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+type ItemCategory struct {
+	ID        uint   `json:"id"`
+	ESIID     uint   `json:"category_id"`
+	Name      string `json:"name"`
+	Published bool   `json:"published"`
+	Groups    []uint `json:"groups,omitempty"`
 }
