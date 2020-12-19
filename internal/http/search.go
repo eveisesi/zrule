@@ -3,8 +3,10 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/eveisesi/zrule/internal/search"
+	"github.com/go-chi/chi"
 )
 
 type searchable struct {
@@ -76,4 +78,51 @@ func (s *server) handleGetSearchName(w http.ResponseWriter, r *http.Request) {
 
 	s.writeResponse(w, http.StatusOK, results)
 
+}
+
+func (s *server) handleNewCategoryEntity(w http.ResponseWriter, r *http.Request) {
+
+	var ctx = r.Context()
+
+	category := chi.URLParam(r, "category")
+	if category == "" {
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("invalid or empty category received"))
+		return
+	}
+
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to coerce %v to integer: %w", chi.URLParam(r, "id"), err))
+		return
+	}
+	if id == 0 {
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("id must be greater than 0"))
+		return
+	}
+
+	switch category {
+	case "alliance":
+		_, err := s.universe.Alliance(ctx, uint(id))
+		if err != nil {
+			s.writeError(w, http.StatusBadRequest, fmt.Errorf("unable to validate alliance id: %w", err))
+			return
+		}
+	case "corporation":
+		_, err := s.universe.Corporation(ctx, uint(id))
+		if err != nil {
+			s.writeError(w, http.StatusBadRequest, fmt.Errorf("unable to validate corporation id: %w", err))
+			return
+		}
+	case "character":
+		_, err := s.universe.Character(ctx, id)
+		if err != nil {
+			s.writeError(w, http.StatusBadRequest, fmt.Errorf("unable to validate character id: %w", err))
+			return
+		}
+	default:
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("%v is not a supported category", category))
+		return
+	}
+
+	s.writeResponse(w, http.StatusNoContent, nil)
 }

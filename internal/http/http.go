@@ -141,7 +141,7 @@ func (s *server) buildRouter() *chi.Mux {
 
 			r.Get(newrelic.WrapHandleFunc(s.newrelic, "/search", s.handleGetSearchName))
 			r.Get(newrelic.WrapHandleFunc(s.newrelic, "/search/categories", s.handleGetSearchCategories))
-
+			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/search/{category}/{id}", s.handleNewCategoryEntity))
 			r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 				s.writeResponse(w, http.StatusNoContent, nil)
 			})
