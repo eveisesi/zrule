@@ -47,7 +47,7 @@ func (s *service) Policies(ctx context.Context, operators ...*zrule.Operator) ([
 							switch t := v.(type) {
 							case float64:
 								switch pathObj.Category {
-								case zrule.PathCategorySystem:
+								case zrule.PathCategorySystems:
 									system, err := s.universe.SolarSystem(ctx, uint(t))
 									if err != nil {
 										newrelic.FromContext(ctx).NoticeError(err)
@@ -58,7 +58,7 @@ func (s *service) Policies(ctx context.Context, operators ...*zrule.Operator) ([
 										ID:   uint64(system.ID),
 										Name: system.Name,
 									}
-								case zrule.PathCategoryConstellation:
+								case zrule.PathCategoryConstellations:
 									constellation, err := s.universe.Constellation(ctx, uint(t))
 									if err != nil {
 										newrelic.FromContext(ctx).NoticeError(err)
@@ -69,7 +69,7 @@ func (s *service) Policies(ctx context.Context, operators ...*zrule.Operator) ([
 										ID:   uint64(constellation.ID),
 										Name: constellation.Name,
 									}
-								case zrule.PathCategoryRegion:
+								case zrule.PathCategoryRegions:
 									region, err := s.universe.Region(ctx, uint(t))
 									if err != nil {
 										newrelic.FromContext(ctx).NoticeError(err)
@@ -115,7 +115,7 @@ func (s *service) Policies(ctx context.Context, operators ...*zrule.Operator) ([
 										ID:   uint64(character.ID),
 										Name: character.Name,
 									}
-								case zrule.PathCategoryItem:
+								case zrule.PathCategoryItems:
 									item, err := s.universe.Item(ctx, uint(t))
 									if err != nil {
 										newrelic.FromContext(ctx).NoticeError(err)
