@@ -25,13 +25,13 @@ func dispatcherCommand(c *cli.Context) {
 	}
 
 	basics.logger.Info("policyRepo initialized")
-
+	repos := initializeRepositories(basics)
 	err = dispatcher.NewService(
 		basics.redis,
 		basics.logger,
 		basics.newrelic,
 		basics.client,
-		policy.NewService(newUniverseService(basics), policyRepo),
+		policy.NewService(newUniverseService(basics, repos), policyRepo),
 		action.NewService(actionRepo),
 	).Run()
 	if err != nil {
