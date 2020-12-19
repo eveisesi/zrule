@@ -9,7 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/eveisesi/zrule"
-	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type service struct {
@@ -55,7 +55,7 @@ func NewService(action *zrule.Action, client *http.Client) (zrule.Dispatcher, er
 
 func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash string) error {
 
-	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send discord message")
+	seg := newrelic.FromContext(ctx).StartSegment("send discord message")
 	defer seg.End()
 
 	uri := url.URL{
@@ -75,7 +75,7 @@ func (s *service) Send(ctx context.Context, policy *zrule.Policy, id uint, hash 
 
 func (s *service) SendTest(ctx context.Context, message string) error {
 
-	seg := newrelic.StartSegment(newrelic.FromContext(ctx), "send discord test message")
+	seg := newrelic.FromContext(ctx).StartSegment("send discord test message")
 	defer seg.End()
 
 	_, err := s.dgo.WebhookExecute(s.id, s.token, true, &discordgo.WebhookParams{
