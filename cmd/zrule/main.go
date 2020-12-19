@@ -21,7 +21,7 @@ var (
 	err    error
 )
 
-type zrule struct {
+type app struct {
 	cfg      config
 	newrelic *newrelic.Application
 	logger   *logrus.Logger
@@ -37,9 +37,9 @@ type zrule struct {
 // loadRedis - takes in a configuration and establises a connection with our cache, in this application that is Redis
 // loadNewrelic - takes in a configuration and configures a NR App to report metrics to NewRelic for monitoring
 // loadClient - create a client from the net/http library that is used on all outgoing http requests
-func basics(command string) *zrule {
+func basics(command string) *app {
 
-	app := zrule{}
+	app := app{}
 
 	app.cfg, err = loadConfig()
 	if err != nil {
