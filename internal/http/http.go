@@ -13,6 +13,7 @@ import (
 	"github.com/eveisesi/zrule/internal/action"
 	"github.com/eveisesi/zrule/internal/dispatcher"
 	"github.com/eveisesi/zrule/internal/policy"
+	"github.com/eveisesi/zrule/internal/search"
 	"github.com/eveisesi/zrule/internal/token"
 	"github.com/eveisesi/zrule/internal/universe"
 	"github.com/eveisesi/zrule/internal/user"
@@ -31,12 +32,13 @@ type server struct {
 	redis    *redis.Client
 	newrelic *newrelic.Application
 
-	token      token.Service
-	user       user.Service
 	action     action.Service
-	policy     policy.Service
-	universe   universe.Service
 	dispatcher dispatcher.Service
+	policy     policy.Service
+	search     search.Service
+	token      token.Service
+	universe   universe.Service
+	user       user.Service
 
 	server *http.Server
 }
@@ -53,6 +55,7 @@ func NewServer(
 	policy policy.Service,
 	universe universe.Service,
 	dispatcher dispatcher.Service,
+	search search.Service,
 ) *server {
 
 	s := &server{
@@ -67,6 +70,7 @@ func NewServer(
 		policy:     policy,
 		universe:   universe,
 		dispatcher: dispatcher,
+		search:     search,
 	}
 
 	s.server = &http.Server{
