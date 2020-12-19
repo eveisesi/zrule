@@ -30,6 +30,22 @@ func NewItemGroupRepository(d *mongo.Database) (zrule.ItemGroupRepository, error
 
 }
 
+func (r *itemGroupRepository) ItemGroups(ctx context.Context, operators ...*zrule.Operator) ([]*zrule.ItemGroup, error) {
+
+	filters := BuildFilters(operators...)
+	options := BuildFindOptions(operators...)
+
+	var itemGroups = make([]*zrule.ItemGroup, 0)
+	result, err := r.itemGroups.Find(ctx, filters, options)
+	if err != nil {
+		return itemGroups, err
+	}
+
+	err = result.All(ctx, &itemGroups)
+	return itemGroups, err
+
+}
+
 func (r *itemGroupRepository) ItemGroup(ctx context.Context, id uint) (*zrule.ItemGroup, error) {
 
 	itemGroup := zrule.ItemGroup{}
