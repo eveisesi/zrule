@@ -33,8 +33,9 @@ type (
 		corporationService
 		itemService
 		regionService
-		solarSystemService
 		searchService
+		solarSystemService
+		statusService
 	}
 	service struct {
 		client      *http.Client
