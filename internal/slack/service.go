@@ -10,7 +10,7 @@ import (
 	"net/url"
 
 	"github.com/eveisesi/zrule"
-	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type service struct {

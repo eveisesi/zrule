@@ -30,6 +30,22 @@ func NewConstellationRepository(d *mongo.Database) (zrule.ConstellationRepositor
 
 }
 
+func (r *constellationRepository) Constellations(ctx context.Context, operators ...*zrule.Operator) ([]*zrule.Constellation, error) {
+
+	filters := BuildFilters(operators...)
+	options := BuildFindOptions(operators...)
+
+	var constellations = make([]*zrule.Constellation, 0)
+	result, err := r.constellations.Find(ctx, filters, options)
+	if err != nil {
+		return constellations, err
+	}
+
+	err = result.All(ctx, &constellations)
+	return constellations, err
+
+}
+
 func (r *constellationRepository) Constellation(ctx context.Context, id uint) (*zrule.Constellation, error) {
 
 	constellation := zrule.Constellation{}

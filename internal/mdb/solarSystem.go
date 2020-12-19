@@ -30,6 +30,22 @@ func NewSolarSystemRepository(d *mongo.Database) (zrule.SolarSystemRepository, e
 
 }
 
+func (r *solarSystemRepository) SolarSystems(ctx context.Context, operators ...*zrule.Operator) ([]*zrule.SolarSystem, error) {
+
+	filters := BuildFilters(operators...)
+	options := BuildFindOptions(operators...)
+
+	var solarSystems = make([]*zrule.SolarSystem, 0)
+	result, err := r.solarSystems.Find(ctx, filters, options)
+	if err != nil {
+		return solarSystems, err
+	}
+
+	err = result.All(ctx, &solarSystems)
+	return solarSystems, err
+
+}
+
 func (r *solarSystemRepository) SolarSystem(ctx context.Context, id uint) (*zrule.SolarSystem, error) {
 
 	solarSystem := zrule.SolarSystem{}

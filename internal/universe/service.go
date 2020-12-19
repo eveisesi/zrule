@@ -1,8 +1,6 @@
 package universe
 
 import (
-	"context"
-
 	"github.com/eveisesi/zrule"
 	"github.com/eveisesi/zrule/internal/esi"
 	"github.com/go-redis/redis/v8"
@@ -15,8 +13,6 @@ type SearchResult struct {
 }
 
 type Service interface {
-	SearchName(ctx context.Context, category, term string, strict bool) ([]*zrule.SearchResult, error)
-
 	zrule.AllianceRepository
 	zrule.CorporationRepository
 	zrule.CharacterRepository
