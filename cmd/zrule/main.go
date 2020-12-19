@@ -102,8 +102,12 @@ func main() {
 		cli.Command{
 			Name:    "dispatcher",
 			Aliases: []string{"d"},
-			// Usage:   "Initializes the websocket client that listens to the ZKillboard Websocket",
-			Action: dispatcherCommand,
+			Action:  dispatcherCommand,
+		},
+		cli.Command{
+			Name:    "initialize",
+			Aliases: []string{"i"},
+			Action:  initializeCommand,
 		},
 	}
 

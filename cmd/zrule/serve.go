@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/eveisesi/zrule/internal/search"
 
 	"golang.org/x/oauth2"
 
@@ -66,7 +69,19 @@ func serveCommand(c *cli.Context) {
 
 	basics.logger.Info("tokenServ service initialized")
 
-	universeServ := newUniverseService(basics)
+	repos := initializeRepositories(basics)
+
+	basics.logger.Info("tokenServ service initialized")
+
+	searchServ := search.NewService(basics.logger, fmt.Sprintf("%s:%d", basics.cfg.Redis.Host, basics.cfg.Redis.Port))
+	if basics.cfg.Redis.InitializeAutocompleter {
+		initializeAutocompleter(basics, repos, searchServ)
+	}
+
+	basics.logger.Info("searchServ service initialized")
+
+	universeServ := newUniverseService(basics, repos)
+
 	actionServ := action.NewService(actionRepo)
 	userServ := user.NewService(basics.logger, basics.redis, tokenServ, universeServ, userRepo)
 	policyServ := policy.NewService(universeServ, policyRepo)
@@ -95,6 +110,7 @@ func serveCommand(c *cli.Context) {
 		policyServ,
 		universeServ,
 		dispacther,
+		searchServ,
 	)
 
 	serverErrors := make(chan error, 1)

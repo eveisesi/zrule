@@ -28,8 +28,9 @@ type config struct {
 	}
 
 	Redis struct {
-		Host string
-		Port uint
+		Host                    string
+		Port                    uint
+		InitializeAutocompleter bool `default:"false"`
 	}
 
 	NewRelic struct {
