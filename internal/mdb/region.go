@@ -30,6 +30,22 @@ func NewRegionRepository(d *mongo.Database) (zrule.RegionRepository, error) {
 
 }
 
+func (r *regionRepository) Regions(ctx context.Context, operators ...*zrule.Operator) ([]*zrule.Region, error) {
+
+	filters := BuildFilters(operators...)
+	options := BuildFindOptions(operators...)
+
+	var regions = make([]*zrule.Region, 0)
+	result, err := r.regions.Find(ctx, filters, options)
+	if err != nil {
+		return regions, err
+	}
+
+	err = result.All(ctx, &regions)
+	return regions, err
+
+}
+
 func (r *regionRepository) Region(ctx context.Context, id uint) (*zrule.Region, error) {
 
 	region := zrule.Region{}
