@@ -142,7 +142,12 @@ func (s *service) Run(limit int64) error {
 		}
 
 		if restart == 1 {
-			s.initializeTracker(ctx)
+			err = s.initializeTracker(ctx)
+			if err != nil {
+				err = fmt.Errorf("failed to initialize trackers: %w", err)
+				s.logger.WithError(err).Errorln()
+				return err
+			}
 			_, err := s.redis.Set(ctx, zrule.QUEUE_RESTART_TRACKER, 0, 0).Result()
 			if err != nil {
 				txn.NoticeError(err)
