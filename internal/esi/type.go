@@ -12,10 +12,76 @@ import (
 )
 
 type itemService interface {
+	GetUniverseCategories(ctx context.Context) ([]uint, Meta)
+	GetUniverseCategoriesCategoryID(ctx context.Context, id uint) (*zrule.ItemCategory, Meta)
 	GetUniverseGroups(ctx context.Context, page *uint) ([]uint, Meta)
 	GetUniverseGroupsGroupID(ctx context.Context, id uint) (*zrule.ItemGroup, Meta)
 	GetUniverseTypes(ctx context.Context, page *uint) ([]uint, Meta)
 	GetUniverseTypesTypeID(ctx context.Context, id uint) (*zrule.Item, Meta)
+}
+
+func (s *service) GetUniverseCategories(ctx context.Context) ([]uint, Meta) {
+
+	path := "/v1/universe/categories"
+
+	request := request{
+		method: http.MethodGet,
+		path:   path,
+	}
+
+	response, m := s.request(ctx, request)
+	if m.IsErr() {
+		return nil, m
+	}
+
+	categories := make([]uint, 0)
+
+	switch m.Code {
+	case http.StatusOK:
+		err := json.Unmarshal(response, &categories)
+		if err != nil {
+			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
+			return nil, m
+		}
+	default:
+		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
+	}
+
+	return categories, m
+
+}
+
+func (s *service) GetUniverseCategoriesCategoryID(ctx context.Context, id uint) (*zrule.ItemCategory, Meta) {
+
+	path := fmt.Sprintf("/v1/universe/categories/%d/", id)
+
+	request := request{
+		method: http.MethodGet,
+		path:   path,
+	}
+
+	response, m := s.request(ctx, request)
+	if m.IsErr() {
+		return nil, m
+	}
+
+	category := new(zrule.ItemCategory)
+
+	switch m.Code {
+	case http.StatusOK:
+		err := json.Unmarshal(response, category)
+		if err != nil {
+			m.Msg = fmt.Errorf("unable to unmarshal response body on request %s: %w", path, err)
+			return nil, m
+		}
+
+		category.ID = id
+	default:
+		m.Msg = fmt.Errorf("unexpected status code received from ESI on request %s", path)
+	}
+
+	return category, m
+
 }
 
 func (s *service) GetUniverseGroups(ctx context.Context, page *uint) ([]uint, Meta) {
