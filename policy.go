@@ -62,7 +62,7 @@ var (
 	PathSolarSystemID = PathObj{
 		Display:        "Solar System",
 		Description:    "The Solar System that the Killmail occurred in",
-		Category:       "systems",
+		Category:       PathCategorySystems,
 		Searchable:     true,
 		SearchEndpoint: EndpointAPI,
 		Format:         "string",
@@ -115,7 +115,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "alliance",
+		Category:       PathCategoryAlliance,
 		Path:           Path("victim.alliance_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -125,7 +125,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "corporation",
+		Category:       PathCategoryCorporation,
 		Path:           Path("victim.corporation_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -135,7 +135,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "character",
+		Category:       PathCategoryCharacter,
 		Path:           Path("victim.character_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ},
 	}
@@ -145,7 +145,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointAPI,
 		Format:         "string",
-		Category:       "items",
+		Category:       PathCategoryItems,
 		Path:           Path("victim.ship_type_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -155,7 +155,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "alliance",
+		Category:       PathCategoryAlliance,
 		Path:           Path("attackers.alliance_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -165,7 +165,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "corporation",
+		Category:       PathCategoryCorporation,
 		Path:           Path("attackers.corporation_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -175,7 +175,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointESI,
 		Format:         "string",
-		Category:       "character",
+		Category:       PathCategoryCharacter,
 		Path:           Path("attackers.character_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ},
 	}
@@ -185,7 +185,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointAPI,
 		Format:         "string",
-		Category:       "items",
+		Category:       PathCategoryItems,
 		Path:           Path("attackers.ship_type_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -195,7 +195,7 @@ var (
 		Searchable:     true,
 		SearchEndpoint: EndpointAPI,
 		Format:         "string",
-		Category:       "items",
+		Category:       PathCategoryItems,
 		Path:           Path("attackers.weapon_type_id"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
@@ -236,19 +236,19 @@ func (p Path) String() string {
 type PathCategory string
 
 const (
-	PathCategoryAlliance      PathCategory = "alliance"
-	PathCategoryCorporation   PathCategory = "corporation"
-	PathCategoryCharacter     PathCategory = "character"
-	PathCategoryRegion        PathCategory = "region"
-	PathCategoryConstellation PathCategory = "constellation"
-	PathCategorySystem        PathCategory = "system"
-	PathCategoryItem          PathCategory = "item"
+	PathCategoryAlliance       PathCategory = "alliance"
+	PathCategoryCorporation    PathCategory = "corporation"
+	PathCategoryCharacter      PathCategory = "character"
+	PathCategoryRegions        PathCategory = "regions"
+	PathCategoryConstellations PathCategory = "constellations"
+	PathCategorySystems        PathCategory = "systems"
+	PathCategoryItems          PathCategory = "items"
 )
 
 var AllPathCategories = []PathCategory{
 	PathCategoryAlliance, PathCategoryCorporation, PathCategoryCharacter,
-	PathCategoryRegion, PathCategoryConstellation, PathCategorySystem,
-	PathCategoryItem,
+	PathCategoryRegions, PathCategoryConstellations, PathCategorySystems,
+	PathCategoryItems,
 }
 
 func (p PathCategory) IsValid() bool {
