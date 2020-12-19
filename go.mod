@@ -3,10 +3,12 @@ module github.com/eveisesi/zrule
 go 1.15
 
 require (
+	github.com/RediSearch/redisearch-go v1.0.1
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-redis/redis/v8 v8.3.3
+	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/copier v0.0.0-20201025035756-632e723a6687
 	github.com/joho/godotenv v1.3.0
