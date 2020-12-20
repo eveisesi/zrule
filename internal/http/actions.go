@@ -146,68 +146,68 @@ func (s *server) handleCreateAction(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *server) handleUpdateAction(w http.ResponseWriter, r *http.Request) {
+// func (s *server) handleUpdateAction(w http.ResponseWriter, r *http.Request) {
 
-	var ctx = r.Context()
+// 	var ctx = r.Context()
 
-	actionID := chi.URLParam(r, "actionID")
-	if actionID == "" {
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf("actionID is required to perform an update"))
-		return
-	}
+// 	actionID := chi.URLParam(r, "actionID")
+// 	if actionID == "" {
+// 		s.writeError(w, http.StatusBadRequest, fmt.Errorf("actionID is required to perform an update"))
+// 		return
+// 	}
 
-	entry := s.logger.WithField("actionID", actionID)
+// 	entry := s.logger.WithField("actionID", actionID)
 
-	user := UserFromContext(ctx)
-	if user == nil {
-		err := fmt.Errorf("ctx does not contain a user")
-		entry.WithError(err).Errorln()
-		s.writeError(w, http.StatusInternalServerError, nil)
-		return
-	}
+// 	user := UserFromContext(ctx)
+// 	if user == nil {
+// 		err := fmt.Errorf("ctx does not contain a user")
+// 		entry.WithError(err).Errorln()
+// 		s.writeError(w, http.StatusInternalServerError, nil)
+// 		return
+// 	}
 
-	objectID, err := primitive.ObjectIDFromHex(actionID)
-	if err != nil {
-		msg := "provided action id is invalid"
-		entry.WithError(err).Error(msg)
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
-		return
-	}
+// 	objectID, err := primitive.ObjectIDFromHex(actionID)
+// 	if err != nil {
+// 		msg := "provided action id is invalid"
+// 		entry.WithError(err).Error(msg)
+// 		s.writeError(w, http.StatusBadRequest, fmt.Errorf(msg))
+// 		return
+// 	}
 
-	entry = entry.WithField("ownerID", user.ID)
+// 	entry = entry.WithField("ownerID", user.ID)
 
-	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
-	if err != nil {
-		entry.WithError(err).Error("failed to find action for provided actionID")
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to find action for provided actionID"))
-		return
-	}
+// 	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewEqualOperator("_id", objectID))
+// 	if err != nil {
+// 		entry.WithError(err).Error("failed to find action for provided actionID")
+// 		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to find action for provided actionID"))
+// 		return
+// 	}
 
-	if len(actions) == 0 || len(actions) > 1 {
-		entry.WithError(err).Error("matched multiple actions for query")
-		s.writeError(w, http.StatusInternalServerError, fmt.Errorf("matched multiple actions for query"))
-		return
-	}
+// 	if len(actions) == 0 || len(actions) > 1 {
+// 		entry.WithError(err).Error("matched multiple actions for query")
+// 		s.writeError(w, http.StatusInternalServerError, fmt.Errorf("matched multiple actions for query"))
+// 		return
+// 	}
 
-	action := actions[0]
+// 	action := actions[0]
 
-	err = json.NewDecoder(r.Body).Decode(&action)
-	if err != nil {
-		entry.WithError(err).Error("failed to decode response")
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to decode response: %w", err))
-		return
-	}
+// 	err = json.NewDecoder(r.Body).Decode(&action)
+// 	if err != nil {
+// 		entry.WithError(err).Error("failed to decode response")
+// 		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to decode response: %w", err))
+// 		return
+// 	}
 
-	action, err = s.action.UpdateAction(ctx, objectID, action)
-	if err != nil {
-		entry.WithError(err).Error("failed to update action")
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to update action: %w", err))
-		return
-	}
+// 	action, err = s.action.UpdateAction(ctx, objectID, action)
+// 	if err != nil {
+// 		entry.WithError(err).Error("failed to update action")
+// 		s.writeError(w, http.StatusBadRequest, fmt.Errorf("failed to update action: %w", err))
+// 		return
+// 	}
 
-	s.writeResponse(w, http.StatusOK, action)
+// 	s.writeResponse(w, http.StatusOK, action)
 
-}
+// }
 
 func (s *server) handleDeleteAction(w http.ResponseWriter, r *http.Request) {
 

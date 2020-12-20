@@ -114,6 +114,14 @@ func (s *server) handleCreatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = s.restartRedisTracker(ctx)
+	if err != nil {
+		msg := "error encountered attempting to create stop flag with default value"
+		s.logger.WithError(err).Fatal(msg)
+		s.writeError(w, http.StatusInternalServerError, fmt.Errorf(msg))
+		return
+	}
+
 	s.writeResponse(w, http.StatusOK, policy)
 
 }
@@ -210,6 +218,14 @@ func (s *server) handleUpdatePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = s.restartRedisTracker(ctx)
+	if err != nil {
+		msg := "error encountered attempting to create stop flag with default value"
+		s.logger.WithError(err).Fatal(msg)
+		s.writeError(w, http.StatusInternalServerError, fmt.Errorf(msg))
+		return
+	}
+
 	s.writeResponse(w, http.StatusOK, policy)
 
 }
@@ -254,8 +270,8 @@ func (s *server) handleGetPolicyActions(w http.ResponseWriter, r *http.Request) 
 	for i, actionID := range policy.Actions {
 		actionIDs[i] = actionID
 	}
-	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewInOperator("_id", actionIDs))
 
+	actions, err := s.action.Actions(ctx, zrule.NewEqualOperator("owner_id", user.ID), zrule.NewInOperator("_id", actionIDs))
 	if err != nil {
 		err = fmt.Errorf("failed to fetch actions by ownerID and actionIDs")
 		s.logger.WithError(err).Errorln()
@@ -303,10 +319,10 @@ func (s *server) handleDeletePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.redis.Set(ctx, zrule.QUEUE_RESTART_TRACKER, 1, 0).Result()
+	err = s.restartRedisTracker(ctx)
 	if err != nil {
 		msg := "error encountered attempting to create stop flag with default value"
-		s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
+		s.logger.WithError(err).Fatal(msg)
 		s.writeError(w, http.StatusInternalServerError, fmt.Errorf(msg))
 		return
 	}
