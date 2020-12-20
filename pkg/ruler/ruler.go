@@ -69,13 +69,13 @@ func (r *Ruler) SetRulesWithJSON(d []byte) {
 // Test takes in an interface. Underlying type should be a
 // map[string]interface or a map[string][]interface{}
 // The root element should be the equivalent of a JSON Object
-func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
+func (r *Ruler) Test(o interface{}) (bool, error) {
 
 	for _, andRule := range r.rules {
 		var passedCounter int
 		for _, rule := range andRule {
 
-			values, err := r.ValuesToEvaluate(rule.Path, 0, o)
+			values, err := r.ValuesToEvaluate(rule.Path, 0, reflect.ValueOf(o), make(map[interface{}]bool)))
 			if err != nil {
 				return false, err
 			}
@@ -96,6 +96,7 @@ func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
 				}
 
 			}
+
 		NextRule:
 		}
 
@@ -109,59 +110,60 @@ func (r *Ruler) Test(o map[string]interface{}) (bool, error) {
 
 }
 
-var ErrMissingKeyFmt = "no value found for key %s"
 
-func (r *Ruler) ValuesToEvaluate(path string, depth int, o interface{}) ([]interface{}, error) {
+// ValuesToEvaluate takes in a path, initial depth, and reflect.Value and return values that can be evaluated based on the path
+// The path is a dotted string (a.b.e) and v can be any complex go value, struct, map, array, etc.
+// Credit: https://stackoverflow.com/questions/47664320/golang-recursively-reflect-both-type-of-field-and-value#answer-47664689
+func (r *Ruler) ValuesToEvaluate(path string, depth int, v reflect.Value, visited map[interface{}]bool) []interface{} {
+
+	results := make([]interface{}, 0)
 
 	parts := strings.Split(path, ".")
-	if len(parts) <= depth {
-		return nil, fmt.Errorf("depth greater than length of key")
+	if len(parts) < depth {
+		return results
 	}
 
-	key := parts[depth]
-	values := make([]interface{}, 0)
-
-	switch a := o.(type) {
-	case map[string]interface{}:
-		if _, ok := a[key]; !ok {
-			if r.config.ErrOnMissingKey {
-				return values, fmt.Errorf(ErrMissingKeyFmt, path)
+	// Drill down through pointers and interfaces to get a value we can print.
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		if v.Kind() == reflect.Ptr {
+			// Check for recursive data
+			if visited[v.Interface()] {
+				return results
 			}
-			return values, nil
+			visited[v.Interface()] = true
+		}
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < v.Len(); i++ {
+			results = append(results, values(path, depth, v.Index(i), visited)...)
+		}
+	case reflect.Struct:
+		key := parts[depth]
+		t := v.Type()
+		for i := 0; i < t.NumField(); i++ {
+			if t.Field(i).Name != key {
+				continue
+			}
+			results = append(results, values(path, depth+1, v.Field(i), visited)...)
+		}
+	case reflect.Map:
+		key := parts[depth]
+		for _, e := range v.MapKeys() {
+			if e.String() != key {
+				continue
+			}
+			results = append(results, values(path, depth+1, v.MapIndex(e), visited)...)
 		}
 
-		valAtLoc := a[key]
-		typeAtLoc := reflect.TypeOf(valAtLoc)
-
-		if typeAtLoc.Kind() == reflect.Slice || typeAtLoc.Kind() == reflect.Map {
-			subValues, err := r.ValuesToEvaluate(path, depth+1, valAtLoc)
-			if err != nil {
-				return values, err
-			}
-
-			values = append(values, subValues...)
-			return values, nil
-		} else if typeAtLoc.Kind() == reflect.Struct {
-			return values, fmt.Errorf("Wrapping type must interface or slice interface, Got Struct")
-		}
-
-		values = append(values, valAtLoc)
-		return values, nil
-
-	case []interface{}:
-		for _, b := range a {
-			subValues, err := r.ValuesToEvaluate(path, depth, b)
-			if err != nil {
-				return values, err
-			}
-
-			values = append(values, subValues...)
-		}
 	default:
-		return values, fmt.Errorf("unsupported type %T passed in", o)
+		results = append(results, v.Interface())
+		return results
 	}
 
-	return values, nil
+	return results
 }
 
 func (r *Ruler) EvaluateValue(cp Comparator, ruleValue interface{}, value interface{}) (bool, error) {
