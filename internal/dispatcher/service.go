@@ -60,13 +60,14 @@ func (s *service) Run() error {
 				txn.NoticeError(err)
 				s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
 			}
+			txn.End()
 			continue
 		}
 
 		if stop == 1 {
 			s.logger.Info("stop signal set, sleeping for 5 seconds")
 			time.Sleep(time.Second * 5)
-			txn.Ignore()
+			txn.End()
 			continue
 		}
 
@@ -74,13 +75,13 @@ func (s *service) Run() error {
 		if err != nil {
 			txn.NoticeError(err)
 			s.logger.WithError(err).Error("unable to determine count of message queue")
+			txn.End()
 			time.Sleep(time.Second * 2)
 			continue
 		}
 
 		if count == 0 {
-			txn.Ignore()
-			s.logger.Info("dispatch queue is empty")
+			txn.End()
 			time.Sleep(time.Second * 2)
 			continue
 		}
@@ -89,6 +90,8 @@ func (s *service) Run() error {
 		if err != nil {
 			txn.NoticeError(err)
 			s.logger.WithError(err).Fatal("unable to retrieve hashes from queue")
+			txn.End()
+			continue
 		}
 
 		for _, result := range results {
@@ -105,30 +108,28 @@ func (s *service) Run() error {
 
 func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
-	txn := newrelic.FromContext(ctx)
-
 	var message = new(zrule.Dispatchable)
 	err := json.Unmarshal(data, message)
 	if err != nil {
-		txn.NoticeError(err)
+		newrelic.FromContext(ctx).NoticeError(err)
 		s.logger.WithError(err).WithField("data", string(data)).Error("failed to unmarsahl data onto dispatchable struct")
 		return
 	}
 
 	policy, err := s.policy.Policy(ctx, message.PolicyID)
 	if err != nil {
-		txn.NoticeError(err)
+		newrelic.FromContext(ctx).NoticeError(err)
 		s.logger.WithError(err).WithField("policyID", message.PolicyID).Error("failed to look up policy")
 		return
 	}
 
-	txn.AddAttribute("policyID", message.PolicyID.Hex())
+	newrelic.FromContext(ctx).AddAttribute("policyID", message.PolicyID.Hex())
 
 	for _, actionID := range policy.Actions {
 		entry := s.logger.WithField("policyID", message.PolicyID.Hex()).WithField("actionID", actionID)
 		action, err := s.action.Action(ctx, actionID)
 		if err != nil {
-			txn.NoticeError(err)
+			newrelic.FromContext(ctx).NoticeError(err)
 			entry.WithError(err).Error("failed to lookup action")
 			continue
 		}
@@ -137,14 +138,14 @@ func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
 		platform, err := s.serviceForPlatform(action)
 		if err != nil {
-			txn.NoticeError(err)
+			newrelic.FromContext(ctx).NoticeError(err)
 			entry.WithError(err).Error("unable to determine platform to use")
 			continue
 		}
 
 		err = platform.Send(ctx, policy, message.ID, message.Hash)
 		if err != nil {
-			txn.NoticeError(err)
+			newrelic.FromContext(ctx).NoticeError(err)
 			entry.WithError(err).Error("failed to send message to platform")
 			continue
 		}

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/eveisesi/zrule/internal/universe"
+
 	"github.com/eveisesi/zrule/pkg/ruler"
 
-	"github.com/korovkin/limiter"
 	"github.com/newrelic/go-agent/v3/newrelic"
 
 	"github.com/eveisesi/zrule"
@@ -38,7 +39,8 @@ type service struct {
 	newrelic *newrelic.Application
 	trackers *policyTracker
 
-	policy policy.Service
+	universe universe.Service
+	policy   policy.Service
 }
 
 func NewService(
@@ -47,6 +49,8 @@ func NewService(
 	newrelic *newrelic.Application,
 
 	policy policy.Service,
+	universe universe.Service,
+
 ) Service {
 
 	s := &service{
@@ -54,6 +58,7 @@ func NewService(
 		logger:   logger,
 		newrelic: newrelic,
 		policy:   policy,
+		universe: universe,
 	}
 
 	err := s.initializeTracker(context.Background())
@@ -104,7 +109,7 @@ func (s *service) initializeTracker(ctx context.Context) error {
 
 func (s *service) Run(limit int64) error {
 
-	limiter := limiter.NewConcurrencyLimiter(int(limit))
+	// limiter := limiter.NewConcurrencyLimiter(int(limit))
 	for {
 		var ctx = context.Background()
 		txn := s.newrelic.StartTransaction("killmail queue check")
@@ -117,6 +122,7 @@ func (s *service) Run(limit int64) error {
 				txn.NoticeError(err)
 				s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
 			}
+			txn.End()
 			continue
 		}
 
@@ -124,6 +130,8 @@ func (s *service) Run(limit int64) error {
 			err := s.initializeTracker(ctx)
 			if err != nil {
 				err = fmt.Errorf("failed to initialize trackers: %w", err)
+				txn.NoticeError(err)
+				txn.End()
 				s.logger.WithError(err).Errorln()
 				return err
 			}
@@ -137,7 +145,7 @@ func (s *service) Run(limit int64) error {
 
 			}
 			time.Sleep(time.Second * 5)
-			txn.Ignore()
+			txn.End()
 			continue
 		}
 
@@ -145,6 +153,8 @@ func (s *service) Run(limit int64) error {
 			err = s.initializeTracker(ctx)
 			if err != nil {
 				err = fmt.Errorf("failed to initialize trackers: %w", err)
+				txn.NoticeError(err)
+				txn.End()
 				s.logger.WithError(err).Errorln()
 				return err
 			}
@@ -154,7 +164,7 @@ func (s *service) Run(limit int64) error {
 				s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
 			}
 			time.Sleep(time.Second * 5)
-			txn.Ignore()
+			txn.End()
 			continue
 		}
 
@@ -166,6 +176,7 @@ func (s *service) Run(limit int64) error {
 				txn.NoticeError(err)
 				s.logger.WithError(err).Fatal("error encountered attempting to create stop flag with default value")
 			}
+			txn.End()
 			continue
 		}
 
@@ -174,21 +185,21 @@ func (s *service) Run(limit int64) error {
 
 			s.logger.Info("sleeping for 5 seconds")
 			time.Sleep(time.Second * 5)
-			txn.Ignore()
+			txn.End()
 			continue
 		}
 
 		count, err := s.redis.ZCount(ctx, zrule.QUEUES_KILLMAIL_PROCESSING, "-inf", "+inf").Result()
 		if err != nil {
 			txn.NoticeError(err)
+			txn.End()
 			s.logger.WithError(err).Error("unable to determine count of message queue")
 			time.Sleep(time.Second * 2)
 			continue
 		}
 
 		if count == 0 {
-			txn.Ignore()
-			s.logger.Info("processing queue is empty")
+			txn.End()
 			time.Sleep(time.Second * 2)
 			continue
 		}
@@ -202,10 +213,10 @@ func (s *service) Run(limit int64) error {
 		for _, result := range results {
 			message := result.Member.(string)
 			s.logger.Info("handling message")
-			limiter.ExecuteWithTicket(func(workerID int) {
-				s.handleMessage(ctx, []byte(message))
-				time.Sleep(time.Millisecond * 500)
-			})
+			// limiter.ExecuteWithTicket(func(workerID int) {
+			s.handleMessage(newrelic.NewContext(ctx, s.newrelic.StartTransaction("handle message").NewGoroutine()), []byte(message))
+			time.Sleep(time.Millisecond * 500)
+			// })
 		}
 
 		txn.End()
@@ -215,16 +226,22 @@ func (s *service) Run(limit int64) error {
 }
 
 func (s *service) handleMessage(ctx context.Context, message []byte) {
-
-	var killmail map[string]interface{}
+	defer newrelic.FromContext(ctx).End()
+	var killmail *zrule.Killmail
 	err := json.Unmarshal(message, &killmail)
 	if err != nil {
+		newrelic.FromContext(ctx).NoticeError(err)
 		s.logger.WithError(err).Errorf("failed to decode message onto %T", killmail)
 	}
 
+	// Hydrate the Killmail with Constellation and Region ID based on the SolarSystem
+
+	s.hydrateKillmail(ctx, killmail)
+
 	for _, tracker := range s.trackers.trackers {
-		result, err := tracker.ruler.Test(killmail)
+		result := tracker.ruler.Test(killmail)
 		if err != nil {
+			newrelic.FromContext(ctx).NoticeError(err)
 			s.logger.WithError(err).WithFields(logrus.Fields{
 				"policyID": tracker.policy.ID,
 			}).Error("failed to apply rules to killmail")
@@ -236,67 +253,91 @@ func (s *service) handleMessage(ctx context.Context, message []byte) {
 
 		entry := s.logger.WithField("policyID", tracker.policy.ID.Hex()).WithField("policyName", tracker.policy.Name)
 		entry.Info("handling match")
-		var (
-			ok   bool
-			id   uint
-			hash string
-		)
-
-		_, ok = killmail["killmail_id"]
-		if !ok {
-			entry.Error("cannot find killmail_id")
-			continue
-		}
-
-		_, ok = killmail["killmail_id"].(float64)
-		if !ok {
-			entry.Error("killmail_id is not of type float64")
-			continue
-		}
-
-		id = uint(killmail["killmail_id"].(float64))
-
-		zkb, ok := killmail["zkb"]
-		if !ok {
-			entry.Error("cannot find zkb object")
-			continue
-		}
-		_, ok = zkb.(map[string]interface{})
-		if !ok {
-			entry.Error("zkb object is not of type map[string]interface{}{}")
-			continue
-		}
-		_, ok = zkb.(map[string]interface{})["hash"]
-		if !ok {
-			entry.Error("cannot find zkb.hash")
-			continue
-		}
-		hash, ok = zkb.(map[string]interface{})["hash"].(string)
-		if !ok {
-			entry.Error("zkb.hash is not of type string")
-			continue
-		}
-
-		if hash == "" {
-			continue
-		}
 
 		payload := zrule.Dispatchable{
 			PolicyID: tracker.policy.ID,
-			ID:       id,
-			Hash:     hash,
+			ID:       killmail.ID,
+			Hash:     killmail.Hash,
 		}
 
 		data, err := json.Marshal(payload)
 		if err != nil {
+			newrelic.FromContext(ctx).NoticeError(err)
 			s.logger.WithError(err).Error("failed to marsahl payload for successfully match")
 		}
 
 		_, err = s.redis.ZAdd(ctx, zrule.QUEUES_KILLMAIL_MATCHED, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(data)}).Result()
 		if err != nil {
+			newrelic.FromContext(ctx).NoticeError(err)
 			s.logger.WithError(err).WithField("payload", string(message)).Error("unable to push payload to matched queue")
 		}
 
+	}
+
+}
+
+func (s *service) hydrateKillmail(ctx context.Context, killmail *zrule.Killmail) {
+
+	entry := s.logger.WithField("killmail_id", killmail.ID)
+	if killmail.Meta != nil {
+		killmail.Hash = killmail.Meta.Hash
+		entry = entry.WithField("killmail_hash", killmail.Hash)
+	}
+
+	system, err := s.universe.SolarSystem(ctx, killmail.SolarSystemID)
+	if err != nil {
+		newrelic.FromContext(ctx).NoticeError(err)
+		entry.WithError(err).WithField("SolarSystemID", killmail.SolarSystemID).Debug("failed to look up solar system for solar system")
+		return
+	}
+
+	constellation, err := s.universe.Constellation(ctx, system.ConstellationID)
+	if err != nil {
+		newrelic.FromContext(ctx).NoticeError(err)
+		entry.WithError(err).WithField("SolarSystemID", killmail.SolarSystemID).WithField("ConstellationID", system.ConstellationID).Debug("failed to look up constellation for solar system")
+		return
+	}
+
+	killmail.ConstellationID = constellation.ID
+	killmail.RegionID = constellation.RegionID
+
+	if killmail.Victim != nil {
+		victimShip, err := s.universe.Item(ctx, killmail.Victim.ShipTypeID)
+		if err != nil {
+			newrelic.FromContext(ctx).NoticeError(err)
+			entry.WithError(err).WithField("Victim.ShipTypeID", killmail.Victim.ShipTypeID).Debug("failed to lookup victim ship")
+		}
+		killmail.Victim.ShipGroupID = victimShip.GroupID
+	}
+
+	if len(killmail.Attackers) > 0 {
+		for i, attacker := range killmail.Attackers {
+
+			if attacker.ShipTypeID != nil {
+				attackerShip, err := s.universe.Item(ctx, *attacker.ShipTypeID)
+				if err != nil {
+					newrelic.FromContext(ctx).NoticeError(err)
+					entry.WithError(err).WithField("attackerID", i).Debug("failed to lookup attacker ship")
+					continue
+				}
+
+				attacker.ShipGroupID = &attackerShip.GroupID
+
+			}
+
+			if attacker.WeaponTypeID != nil {
+				attackerWeapon, err := s.universe.Item(ctx, *attacker.WeaponTypeID)
+				if err != nil {
+					newrelic.FromContext(ctx).NoticeError(err)
+					entry.WithError(err).WithField("attackerID", i).Debug("failed to lookup attacker ship")
+					continue
+				}
+
+				attacker.WeaponGroupID = &attackerWeapon.GroupID
+
+			}
+
+		}
 	}
 
 }

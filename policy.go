@@ -46,17 +46,20 @@ type PathObj struct {
 	Category       PathCategory       `json:"category,omitempty"`
 	Searchable     bool               `json:"searchable"`
 	SearchEndpoint endpoint           `json:"searchEndpoint,omitempty"`
-	Format         string             `json:"format"`
+	Format         format             `json:"format"`
 	Path           Path               `json:"path"`
 	Comparators    []ruler.Comparator `json:"comparators"`
 }
 
-type Path string
+type format string
 type endpoint string
 
 const (
-	EndpointESI endpoint = "esi"
-	EndpointAPI endpoint = "api"
+	endpointESI   endpoint = "esi"
+	endpointAPI   endpoint = "api"
+	formatString  format   = "string"
+	formatNumber  format   = "number"
+	formatBoolean format   = "boolean"
 )
 
 var (
@@ -65,161 +68,257 @@ var (
 		Description:    "The Solar System that the Killmail occurred in",
 		Category:       PathCategorySystems,
 		Searchable:     true,
-		SearchEndpoint: EndpointAPI,
-		Format:         "string",
-		Path:           Path("solar_system_id"),
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Path:           Path("SolarSystemID"),
+		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathConstellationID = PathObj{
+		Display:        "Constellation",
+		Description:    "The Constellation that the Killmail occurred in",
+		Category:       PathCategoryConstellations,
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Path:           Path("ConstellationID"),
+		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathRegionID = PathObj{
+		Display:        "Region",
+		Description:    "The Region that the Killmail occurred in",
+		Category:       PathCategoryRegions,
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Path:           Path("RegionID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathZKBNPC = PathObj{
 		Display:     "ZKillboard Is NPC",
 		Description: "ZKillboard has labeled the killmail as an NPC Kill",
-		Searchable:  false,
-		Format:      "boolean",
-		Path:        Path("zkb.npc"),
+		Format:      formatBoolean,
+		Path:        Path("Meta.NPC"),
 		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBAWOX = PathObj{
 		Display:     "ZKillboard Is AWOX",
 		Description: "Zkillboard has labeled the killmail as an AWOX Kill",
-		Searchable:  false,
-		Format:      "boolean",
-		Path:        Path("zkb.awox"),
+		Format:      formatBoolean,
+		Path:        Path("Meta.AWOX"),
 		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBSolo = PathObj{
 		Display:     "ZKillboard Is Solo",
 		Description: "ZKIllboard has labeled the killmail as a Solo Kill",
-		Searchable:  false,
-		Format:      "boolean",
-		Path:        Path("zkb.solo"),
+		Format:      formatBoolean,
+		Path:        Path("Meta.Solo"),
 		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathZKBFittedValue = PathObj{
 		Display:     "Zkillboard Fitted Value",
 		Description: "The ISK value of all modules and ammo fitted to the ship",
-		Searchable:  false,
-		Format:      "number",
-		Path:        Path("zkb.fittedValue"),
+		Format:      formatNumber,
+		Path:        Path("Meta.FittedValue"),
 		Comparators: []ruler.Comparator{ruler.EQ, ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
 	}
 	PathZKBTotalValue = PathObj{
 		Display:     "ZKillboard Total Value",
 		Description: "The ISK value of the killmail",
-		Searchable:  false,
-		Format:      "number",
-		Path:        Path("zkb.totalValue"),
+		Format:      formatNumber,
+		Path:        Path("Meta.TotalValue"),
 		Comparators: []ruler.Comparator{ruler.EQ, ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
+	}
+	PathWarID = PathObj{
+		Display:     "War ID",
+		Description: "The ID of the war that this killmail is involved in.",
+		Format:      formatNumber,
+		Path:        Path("WarID"),
+		Comparators: []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimAllianceID = PathObj{
 		Display:        "Victim Alliance",
-		Description:    "The alliance that the victim is apart of",
+		Description:    "The alliance that the victim is/was apart of at the time of the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryAlliance,
-		Path:           Path("victim.alliance_id"),
+		Path:           Path("Victim.AllianceID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathVictimCorporationID = PathObj{
 		Display:        "Victim Corporation",
-		Description:    "The Corporation that the victim is apart of",
+		Description:    "The Corporation that the victim is/was apart of at the time of the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryCorporation,
-		Path:           Path("victim.corporation_id"),
+		Path:           Path("Victim.CorporationID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathVictimCharacterID = PathObj{
 		Display:        "Victim Character",
-		Description:    "The Victim",
+		Description:    "The Victims Character",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryCharacter,
-		Path:           Path("victim.character_id"),
+		Path:           Path("Victim.CharacterID"),
+		Comparators:    []ruler.Comparator{ruler.EQ},
+	}
+	PathVictimFactionID = PathObj{
+		Display:        "Victim Faction",
+		Description:    "The Faction that the Character belongs to",
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Category:       PathCategoryFaction,
+		Path:           Path("Victim.FactionID"),
 		Comparators:    []ruler.Comparator{ruler.EQ},
 	}
 	PathVictimShipTypeID = PathObj{
 		Display:        "Victim Ship",
-		Description:    "The ship that the victim was flying",
+		Description:    "The ship that the victim was flying at the time of loss",
 		Searchable:     true,
-		SearchEndpoint: EndpointAPI,
-		Format:         "string",
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
 		Category:       PathCategoryItems,
-		Path:           Path("victim.ship_type_id"),
+		Path:           Path("Victim.ShipTypeID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathVictimShipGroupID = PathObj{
+		Display:        "Victim Ship Group",
+		Description:    "The group that the ship that the victim was flying belongs to",
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Category:       PathCategoryItemGroups,
+		Path:           Path("Victim.ShipGroupID"),
+		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathVictimDamageTaken = PathObj{
+		Display:     "Victim Damange Sustained",
+		Description: "The amount of damage applied to the ship",
+		Format:      formatNumber,
+		Category:    PathCategoryDamageTaken,
+		Path:        Path("Victim.DamageTaken"),
+		Comparators: []ruler.Comparator{ruler.EQ, ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
 	}
 	PathAttackerAllianceID = PathObj{
 		Display:        "Attacker Alliance",
-		Description:    "The alliance that the attacker belongs to",
+		Description:    "The alliance that the attacker is/was apart of at the time of the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryAlliance,
-		Path:           Path("attackers.alliance_id"),
+		Path:           Path("Attackers.AllianceID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerCorporationID = PathObj{
 		Display:        "Attacker Corporation",
-		Description:    "The corporation that the attacker belongs to",
+		Description:    "The corporation that the attacker is/was apart of at the time of the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryCorporation,
-		Path:           Path("attackers.corporation_id"),
+		Path:           Path("Attackers.CorporationID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerCharacterID = PathObj{
 		Display:        "Attacker Character",
-		Description:    "The Attacker",
+		Description:    "The Attacker Character",
 		Searchable:     true,
-		SearchEndpoint: EndpointESI,
-		Format:         "string",
+		SearchEndpoint: endpointESI,
+		Format:         formatString,
 		Category:       PathCategoryCharacter,
-		Path:           Path("attackers.character_id"),
+		Path:           Path("Attackers.CharacterID"),
 		Comparators:    []ruler.Comparator{ruler.EQ},
+	}
+	PathAttackerFactionID = PathObj{
+		Display:        "Attacker Faction",
+		Description:    "The faction that the attacker is/was apart of at the time of the kill",
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Category:       PathCategoryFaction,
+		Path:           Path("Attackers.FactionID"),
+		Comparators:    []ruler.Comparator{ruler.EQ},
+	}
+	PathAttackersDamageDone = PathObj{
+		Display:     "Attacker Damage Done",
+		Description: "The amount of damage this attacker dealt to the victim",
+		Format:      formatNumber,
+		Category:    PathCategoryDamageDone,
+		Path:        Path("Attackers.DamageDone"),
+		Comparators: []ruler.Comparator{ruler.GT, ruler.GTE, ruler.LT, ruler.LTE},
 	}
 	PathAttackerShipTypeID = PathObj{
 		Display:        "Attacker Ship",
-		Description:    "The Ship that the attacker was flying",
+		Description:    "The Ship that the attacker was flying at the time of the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointAPI,
-		Format:         "string",
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
 		Category:       PathCategoryItems,
-		Path:           Path("attackers.ship_type_id"),
+		Path:           Path("Attackers.ShipTypeID"),
+		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathAttackerShipGroupID = PathObj{
+		Display:        "Attacker Ship Group",
+		Description:    "The group of the ship that the attacker was flying at the time of the kill",
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Category:       PathCategoryItemGroups,
+		Path:           Path("Attackers.ShipGroupID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 	PathAttackerWeaponTypeID = PathObj{
 		Display:        "Attacker Weapon",
-		Description:    "The weapon that the attacker used",
+		Description:    "The weapon that the attacker used during the kill",
 		Searchable:     true,
-		SearchEndpoint: EndpointAPI,
-		Format:         "string",
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
 		Category:       PathCategoryItems,
-		Path:           Path("attackers.weapon_type_id"),
+		Path:           Path("Attackers.WeaponTypeID"),
+		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
+	}
+	PathAttackerWeaponGroupID = PathObj{
+		Display:        "Attacker Weapon Group",
+		Description:    "The group of the weapon that the attacker was using at the time of the kill",
+		Searchable:     true,
+		SearchEndpoint: endpointAPI,
+		Format:         formatString,
+		Category:       PathCategoryItemGroups,
+		Path:           Path("Attackers.WeaponGroupID"),
 		Comparators:    []ruler.Comparator{ruler.EQ, ruler.NEQ},
 	}
 )
 
 var AllPaths = []PathObj{
 	PathSolarSystemID,
+	PathConstellationID,
+	PathRegionID,
 	PathZKBNPC,
 	PathZKBAWOX,
 	PathZKBSolo,
 	PathZKBFittedValue,
 	PathZKBTotalValue,
+	PathWarID,
 	PathVictimAllianceID,
 	PathVictimCorporationID,
 	PathVictimCharacterID,
+	PathVictimFactionID,
 	PathVictimShipTypeID,
-	// PathVictimItemsTypeID,
 	PathAttackerAllianceID,
 	PathAttackerCorporationID,
 	PathAttackerCharacterID,
+	PathAttackerFactionID,
 	PathAttackerShipTypeID,
+	PathAttackerShipGroupID,
 	PathAttackerWeaponTypeID,
+	PathAttackerWeaponGroupID,
 }
+
+type Path string
 
 func (p Path) IsValid() bool {
 	for _, v := range AllPaths {
@@ -240,16 +339,22 @@ const (
 	PathCategoryAlliance       PathCategory = "alliance"
 	PathCategoryCorporation    PathCategory = "corporation"
 	PathCategoryCharacter      PathCategory = "character"
+	PathCategoryFaction        PathCategory = "factions"
 	PathCategoryRegions        PathCategory = "regions"
 	PathCategoryConstellations PathCategory = "constellations"
 	PathCategorySystems        PathCategory = "systems"
 	PathCategoryItems          PathCategory = "items"
+	PathCategoryItemGroups     PathCategory = "itemGroups"
+	PathCategoryDamageTaken    PathCategory = "damageTaken"
+	PathCategoryDamageDone     PathCategory = "damageDone"
 )
 
 var AllPathCategories = []PathCategory{
 	PathCategoryAlliance, PathCategoryCorporation, PathCategoryCharacter,
 	PathCategoryRegions, PathCategoryConstellations, PathCategorySystems,
-	PathCategoryItems,
+	PathCategoryItems, PathCategoryItemGroups,
+	PathCategoryDamageDone, PathCategoryDamageTaken,
+	PathCategoryFaction,
 }
 
 func (p PathCategory) IsValid() bool {

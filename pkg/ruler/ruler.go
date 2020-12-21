@@ -144,6 +144,9 @@ func (r *Ruler) ValuesToEvaluate(path string, depth int, v reflect.Value, visite
 		}
 
 	default:
+		if !v.IsValid() {
+			return results
+		}
 		results = append(results, v.Interface())
 		return results
 	}

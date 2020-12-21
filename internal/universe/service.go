@@ -19,7 +19,7 @@ type Service interface {
 	zrule.RegionRepository
 	zrule.ConstellationRepository
 	zrule.SolarSystemRepository
-
+	zrule.FactionRepository
 	zrule.ItemRepository
 	zrule.ItemGroupRepository
 }
@@ -36,7 +36,7 @@ type service struct {
 	zrule.RegionRepository
 	zrule.ConstellationRepository
 	zrule.SolarSystemRepository
-
+	zrule.FactionRepository
 	zrule.ItemRepository
 	zrule.ItemGroupRepository
 }
@@ -52,7 +52,7 @@ func NewService(
 	region zrule.RegionRepository,
 	constellation zrule.ConstellationRepository,
 	solarSystem zrule.SolarSystemRepository,
-
+	faction zrule.FactionRepository,
 	item zrule.ItemRepository,
 	itemGroup zrule.ItemGroupRepository,
 ) Service {
@@ -68,6 +68,7 @@ func NewService(
 		RegionRepository:        region,
 		ConstellationRepository: constellation,
 		SolarSystemRepository:   solarSystem,
+		FactionRepository:       faction,
 		ItemRepository:          item,
 		ItemGroupRepository:     itemGroup,
 	}

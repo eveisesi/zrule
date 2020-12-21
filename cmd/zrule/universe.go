@@ -12,7 +12,7 @@ func newUniverseService(basics *app, repos repositories) universe.Service {
 		basics.redis, basics.newrelic, esiServ,
 		repos.alliance, repos.corporation, repos.character,
 		repos.region, repos.constellation, repos.system,
-		repos.item, repos.itemGroup,
+		repos.faction, repos.item, repos.itemGroup,
 	)
 
 }

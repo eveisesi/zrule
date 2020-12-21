@@ -1,16 +1,15 @@
 package zrule
 
 import (
-	"context"
 	"time"
 )
 
-type KillmailRepository interface {
-	Killmail(ctx context.Context, id uint) (*Killmail, error)
-	Killmails(ctx context.Context, operators ...*Operator) ([]*Killmail, error)
+// type KillmailRepository interface {
+// 	Killmail(ctx context.Context, id uint) (*Killmail, error)
+// 	Killmails(ctx context.Context, operators ...*Operator) ([]*Killmail, error)
 
-	CreateKillmail(ctx context.Context, killmail *Killmail) error
-}
+// 	CreateKillmail(ctx context.Context, killmail *Killmail) error
+// }
 
 type KillHash struct {
 	ID   uint      `bson:"id" json:"id"`
@@ -19,82 +18,55 @@ type KillHash struct {
 }
 
 type Killmail struct {
-	ID              uint      `bson:"id" json:"id"`
-	Hash            string    `bson:"hash" json:"hash"`
-	MoonID          *uint     `bson:"moonID,omitempty" json:"moonID,omitempty"`
-	SolarSystemID   uint      `bson:"solarSystemID" json:"solarSystemID"`
-	ConstellationID uint      `bson:"constellationID"`
-	RegionID        uint      `bson:"regionID"`
-	WarID           *uint     `bson:"warID,omitempty" json:"warID,omitempty"`
-	IsNPC           bool      `bson:"isNPC" json:"isNPC"`
-	IsAwox          bool      `bson:"isAwox" json:"isAwox"`
-	IsSolo          bool      `bson:"isSolo" json:"isSolo"`
-	DroppedValue    float64   `bson:"droppedValue" json:"droppedValue"`
-	DestroyedValue  float64   `bson:"destroyedValue" json:"destroyedValue"`
-	FittedValue     float64   `bson:"fittedValue" json:"fittedValue"`
-	TotalValue      float64   `bson:"totalValue" json:"totalValue"`
-	KillmailTime    time.Time `bson:"killmailTime" json:"killmailTime"`
+	ID              uint      `json:"killmail_id"`       // bson:"killmail_id"
+	Hash            string    `json:"killmail_hash"`     // bson:"killmail_hash"
+	MoonID          *uint     `json:"moon_id,omitempty"` // bson:"moon_id,o
+	SolarSystemID   uint      `json:"solar_system_id"`   // bson:"solar_system_id"
+	ConstellationID uint      `json:"constellation_id"`
+	RegionID        uint      `json:"region_id"`
+	WarID           *uint     `json:"war_id,omitempty"` // bson:"war_id,o
+	KillmailTime    time.Time `json:"killmail_time"`    // bson:"killmail_time"
 
-	System    *SolarSystem        `bson:"-" json:"-"`
-	Attackers []*KillmailAttacker `bson:"attackers" json:"attackers"`
-	Victim    *KillmailVictim     `bson:"victim" json:"victim"`
+	Attackers []*KillmailAttacker `json:"attackers"` // bson:"attackers"
+	Victim    *KillmailVictim     `json:"victim"`    // bson:"victim"
+	Meta      *Meta               `json:"zkb"`
+}
+
+type Meta struct {
+	LocationID  uint    `json:"locationID"`
+	Hash        string  `json:"hash"`
+	FittedValue float64 `json:"fittedValue"`
+	TotalValue  float64 `json:"totalValue"`
+	Points      uint    `json:"points"`
+	NPC         bool    `json:"npc"`
+	Solo        bool    `json:"bool"`
+	Awox        bool    `json:"awox"`
+	ESI         string  `json:"esi"`
+	URL         string  `json:"url"`
 }
 
 type KillmailAttacker struct {
-	KillmailID     uint    `bson:"killmailID" json:"killmailID"`
-	AllianceID     *uint   `bson:"allianceID" json:"allianceID"`
-	CharacterID    *uint64 `bson:"characterID" json:"characterID"`
-	CorporationID  *uint   `bson:"corporationID" json:"corporationID"`
-	FactionID      *uint   `bson:"factionID" json:"factionID"`
-	DamageDone     uint    `bson:"damageDone" json:"damageDone"`
-	FinalBlow      bool    `bson:"finalBlow" json:"finalBlow"`
-	SecurityStatus float64 `bson:"securityStatus" json:"securityStatus"`
-	ShipTypeID     *uint   `bson:"shipTypeID" json:"shipTypeID"`
-	ShipGroupID    *uint   `bson:"shipGroupID" json:"shipGroupID"`
-	WeaponTypeID   *uint   `bson:"weaponTypeID" json:"weaponTypeID"`
-	WeaponGroupID  *uint   `bson:"weaponGroupID" json:"weaponGroupID"`
-
-	Alliance    *Alliance    `bson:"-" json:"-"`
-	Character   *Character   `bson:"-" json:"-"`
-	Corporation *Corporation `bson:"-" json:"-"`
-	Ship        *Item        `bson:"-" json:"-"`
-	Weapon      *Item        `bson:"-" json:"-"`
-}
-
-type KillmailItem struct {
-	KillmailID        uint    `bson:"killmailID" json:"killmailID"`
-	Flag              uint    `bson:"flag" json:"flag"`
-	ItemTypeID        uint    `bson:"itemTypeID" json:"itemTypeID"`
-	ItemGroupID       uint    `bson:"itemGroupID" json:"itemGroupID"`
-	QuantityDropped   *uint   `bson:"quantityDropped" json:"quantityDropped"`
-	QuantityDestroyed *uint   `bson:"quantityDestroyed" json:"quantityDestroyed"`
-	ItemValue         float64 `bson:"itemValue" json:"itemValue"`
-	TotalValue        float64 `bson:"totalValue" json:"totalValue"`
-	Singleton         uint8   `bson:"singleton" json:"singleton"`
-	IsParent          bool    `bson:"isparent" json:"isparent"`
-
-	Type  *Item           `bson:"-" json:"-"`
-	Items []*KillmailItem `bson:"items" json:"items"`
+	AllianceID     *uint   `json:"alliance_id"`     // bson:"alliance_id"
+	CharacterID    *uint64 `json:"character_id"`    // bson:"character_id"
+	CorporationID  *uint   `json:"corporation_id"`  // bson:"corporation_id"
+	FactionID      *uint   `json:"faction_id"`      // bson:"faction_id"
+	DamageDone     uint    `json:"damage_done"`     // bson:"damage_done"
+	FinalBlow      bool    `json:"final_blow"`      // bson:"final_blow"
+	SecurityStatus float64 `json:"security_status"` // bson:"security_status"
+	ShipTypeID     *uint   `json:"ship_type_id"`    // bson:"ship_type_id"
+	ShipGroupID    *uint   `json:"shipGroupID"`     // bson:"shipGroupID"
+	WeaponTypeID   *uint   `json:"weapon_type_id"`  // bson:"weapon_type_id"
+	WeaponGroupID  *uint   `json:"weaponGroupID"`   // bson:"weaponGroupID"
 }
 
 type KillmailVictim struct {
-	KillmailID    uint    `bson:"killmailID" json:"killmailID"`
-	AllianceID    *uint   `bson:"allianceID" json:"allianceID"`
-	CharacterID   *uint64 `bson:"characterID" json:"characterID"`
-	CorporationID *uint   `bson:"corporationID" json:"corporationID"`
-	FactionID     *uint   `bson:"factionID" json:"factionID"`
-	DamageTaken   uint    `bson:"damageTaken" json:"damageTaken"`
-	ShipTypeID    uint    `bson:"shipTypeID" json:"shipTypeID"`
-	ShipGroupID   uint    `bson:"shipGroupID" json:"shipGroupID"`
-	ShipValue     float64 `bson:"shipValue" json:"shipValue"`
-
-	Alliance    *Alliance    `bson:"-" json:"-"`
-	Character   *Character   `bson:"-" json:"-"`
-	Corporation *Corporation `bson:"-" json:"-"`
-	Ship        *Item        `bson:"-" json:"-"`
-
-	Position *Position       `bson:"position" json:"position"`
-	Items    []*KillmailItem `bson:"items" json:"items"`
+	AllianceID    *uint   `json:"alliance_id"`    // bson:"alliance_id"
+	CharacterID   *uint64 `json:"character_id"`   // bson:"character_id"
+	CorporationID *uint   `json:"corporation_id"` // bson:"corporation_id"
+	FactionID     *uint   `json:"faction_id"`     // bson:"faction_id"
+	DamageTaken   uint    `json:"damage_taken"`   // bson:"damage_taken"
+	ShipTypeID    uint    `json:"ship_type_id"`   // bson:"ship_type_id"
+	ShipGroupID   uint    `json:"ship_group_id"`  // bson:"ship_group_id"
 }
 
 type Position struct {

@@ -31,6 +31,21 @@ type Character struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
+type FactionRepository interface {
+	Faction(ctx context.Context, id uint) (*Faction, error)
+	Factions(ctx context.Context, operators ...*Operator) ([]*Faction, error)
+	CreateFaction(ctx context.Context, faction *Faction) (*Faction, error)
+}
+
+type Faction struct {
+	ID            uint      `bson:"id" json:"id"`
+	ESIID         uint      `bson:"-" json:"faction_id"`
+	Name          string    `bson:"name" json:"name"`
+	CorporationID uint      `bson:"corporation_id" json:"corporation_id"`
+	CreatedAt     time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `bson:"updated_at" json:"updated_at"`
+}
+
 type ConstellationRepository interface {
 	Constellations(ctx context.Context, operators ...*Operator) ([]*Constellation, error)
 	Constellation(ctx context.Context, id uint) (*Constellation, error)

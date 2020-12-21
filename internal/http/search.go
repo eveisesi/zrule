@@ -20,12 +20,12 @@ func (s *server) handleGetSearchCategories(w http.ResponseWriter, r *http.Reques
 	// Search is provided for a subset of searchable entities within Eve Online
 	// We cannot facilitate search for Alliaces, Corporations, or Characters
 	// There are just to many in Eve Online, that is why the search service only provides
-	// Regions, Constellations, Systems, Items, and ItemGroups.
+	// Regions, Constellations, Systems, Items, ItemGroups, and Factions.
 	// For Alliaces, Corporations, or Characters, we need to tell the consumer to use
 	// the actual ESI API
 
 	// There are all of the possible search categories per say
-	allCategories := []string{"alliances", "corporations", "characters", "regions", "constellations", "systems", "items", "itemGroups"}
+	allCategories := []string{"alliances", "corporations", "characters", "regions", "constellations", "systems", "items", "itemGroups", "faction"}
 
 	// Get the ones that we provide
 	allKeys := search.AllKeys
@@ -66,7 +66,12 @@ func (s *server) handleGetSearchName(w http.ResponseWriter, r *http.Request) {
 
 	key := r.URL.Query().Get("key")
 	if key == "" {
-		s.writeError(w, http.StatusBadRequest, fmt.Errorf("category query paramater is required to execute a search"))
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("key query paramater is required to execute a search"))
+		return
+	}
+
+	if !search.Key(key).Valid() {
+		s.writeError(w, http.StatusBadRequest, fmt.Errorf("key is invalid"))
 		return
 	}
 

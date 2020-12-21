@@ -80,7 +80,7 @@ func initializeCommand(c *cli.Context) {
 	basics.logger.Info("groups and items imported successfully")
 
 	regions, m := esiServ.GetUniverseRegions(ctx)
-	if err != nil {
+	if m.IsErr() {
 		basics.logger.WithError(m.Msg).Error("failed to fetch regions from ESI")
 		return
 	}
@@ -138,6 +138,21 @@ func initializeCommand(c *cli.Context) {
 			basics.logger.WithField("regionID", regionID).Info("region saved successfully")
 		}(basics, wg, regionID)
 
+	}
+
+	factions, m := esiServ.GetUniverseFactions(ctx)
+	if m.IsErr() {
+		basics.logger.WithError(m.Msg).Error("failed to fetch factions from ESI")
+		return
+	}
+
+	for _, faction := range factions {
+		faction.ID = faction.ESIID
+		faction, err = universe.CreateFaction(ctx, faction)
+		if err != nil {
+			basics.logger.WithError(err).WithField("factionID", faction.ID).Error("failed to save faction to database")
+			return
+		}
 	}
 
 	wg.Wait()

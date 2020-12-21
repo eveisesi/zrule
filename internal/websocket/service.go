@@ -58,7 +58,6 @@ func (s *service) Run() error {
 			txn.End()
 			break
 		}
-
 		for {
 
 			_, message, err := conn.ReadMessage()
@@ -84,7 +83,8 @@ func (s *service) Run() error {
 				s.logger.WithError(err).WithField("payload", string(message)).Error("unable to push killmail to processing queue")
 				return err
 			}
-			s.logger.Info("payload dispatched successfully")
+			s.logger.Info("message received")
+
 		}
 	}
 
