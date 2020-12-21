@@ -215,7 +215,6 @@ func (s *service) Run(limit int64) error {
 			s.logger.Info("handling message")
 			// limiter.ExecuteWithTicket(func(workerID int) {
 			s.handleMessage(newrelic.NewContext(ctx, s.newrelic.StartTransaction("handle message").NewGoroutine()), []byte(message))
-			time.Sleep(time.Millisecond * 500)
 			// })
 		}
 
