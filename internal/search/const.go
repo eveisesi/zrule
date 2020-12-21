@@ -8,10 +8,11 @@ const (
 	KeySystems        Key = "systems"
 	KeyItems          Key = "items"
 	KeyItemGroups     Key = "itemGroups"
+	KeyFactions       Key = "factions"
 )
 
 var AllKeys = []Key{
-	KeyRegions, KeyConstellations, KeySystems, KeyItemGroups, KeyItems,
+	KeyRegions, KeyConstellations, KeySystems, KeyItemGroups, KeyItems, KeyFactions,
 }
 
 func (r Key) String() string {

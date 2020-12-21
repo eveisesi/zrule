@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/eveisesi/zrule"
 	"github.com/eveisesi/zrule/internal/search"
 	"github.com/jinzhu/copier"
 )
@@ -74,7 +73,7 @@ func initializeAutocompleter(basics *app, repos repositories, searchServ search.
 	entry = basics.logger.WithField("autocompleter", "itemGroups")
 	entry.Info("initializing autocompleter")
 
-	itemGroups, _ := repos.itemGroup.ItemGroups(ctx, zrule.NewEqualOperator("category", 6))
+	itemGroups, _ := repos.itemGroup.ItemGroups(ctx)
 	entities = make([]*search.Entity, len(itemGroups))
 	for i, group := range itemGroups {
 		entity := new(search.Entity)
@@ -106,6 +105,27 @@ func initializeAutocompleter(basics *app, repos repositories, searchServ search.
 		entities[i] = entity
 	}
 	err = searchServ.InitializeAutocompleter(search.KeyItems, entities)
+	if err != nil {
+		entry.WithError(err).Fatal("failed to initialize autocompleter")
+	}
+
+	entry.Info("autocompleter initialized successfully")
+
+	entry = basics.logger.WithField("autocompleter", "factions")
+	entry.Info("initializing autocompleter")
+
+	factions, _ := repos.faction.Factions(ctx)
+	entities = make([]*search.Entity, len(factions))
+	for i, faction := range factions {
+		entity := new(search.Entity)
+		err = copier.Copy(entity, faction)
+		if err != nil {
+			basics.logger.WithError(err).Error("failed to copy region to generic entity")
+			continue
+		}
+		entities[i] = entity
+	}
+	err = searchServ.InitializeAutocompleter(search.KeyFactions, entities)
 	if err != nil {
 		entry.WithError(err).Fatal("failed to initialize autocompleter")
 	}

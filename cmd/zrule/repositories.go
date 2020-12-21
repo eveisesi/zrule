@@ -9,6 +9,7 @@ type repositories struct {
 	alliance      zrule.AllianceRepository
 	character     zrule.CharacterRepository
 	corporation   zrule.CorporationRepository
+	faction       zrule.FactionRepository
 	region        zrule.RegionRepository
 	constellation zrule.ConstellationRepository
 	system        zrule.SolarSystemRepository
@@ -33,6 +34,13 @@ func initializeRepositories(basics *app) repositories {
 	}
 
 	basics.logger.Info("charactersRepo initialized")
+
+	repos.faction, err = mdb.NewFactionRepository(basics.db)
+	if err != nil {
+		basics.logger.WithError(err).Fatal("failed to initialize factionsRepo")
+	}
+
+	basics.logger.Info("factionsRepo initialized")
 
 	repos.constellation, err = mdb.NewConstellationRepository(basics.db)
 	if err != nil {

@@ -135,7 +135,7 @@ func (s *server) buildRouter() *chi.Mux {
 			r.Get(newrelic.WrapHandleFunc(s.newrelic, "/actions", s.handleGetActions))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/actions", s.handleCreateAction))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}/test", s.handlePostActionTest))
-			r.Patch(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}", s.handleUpdateAction))
+			// r.Patch(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}", s.handleUpdateAction))
 			r.Delete(newrelic.WrapHandleFunc(s.newrelic, "/actions/{actionID}", s.handleDeleteAction))
 			r.Post(newrelic.WrapHandleFunc(s.newrelic, "/rules/validate", s.handlePostValidateRules))
 

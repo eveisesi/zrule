@@ -32,6 +32,7 @@ type (
 		constellationService
 		corporationService
 		itemService
+		factionService
 		regionService
 		searchService
 		solarSystemService

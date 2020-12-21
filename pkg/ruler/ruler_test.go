@@ -1,87 +1,101 @@
-package ruler
+package ruler_test
 
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/eveisesi/zrule"
+	"github.com/eveisesi/zrule/pkg/ruler"
 )
 
 func TestRules(t *testing.T) {
 
 	cases := []struct {
-		rules  Rules
-		o      map[string]interface{}
+		rules  ruler.Rules
+		o      interface{}
 		name   string
 		result bool
 	}{
 		{
-			[][]*Rule{
-				[]*Rule{
-					&Rule{
-						"in",
-						"a.b.c",
-						[]interface{}{2, 4, 5, 9},
-					},
-					&Rule{
-						"in",
-						"a.b.c",
-						[]interface{}{1, 3, 6},
-					},
-				},
-				[]*Rule{
-					&Rule{
-						"in",
-						"a.b.c",
-						[]interface{}{9, 56, 46},
-					},
-					&Rule{
-						"in",
-						"a.f.g",
-						[]interface{}{42, 35, 78},
+			[][]*ruler.Rule{
+				[]*ruler.Rule{
+					&ruler.Rule{
+						"eq",
+						"Meta.Solo",
+						[]interface{}{true},
 					},
 				},
 			},
-			map[string]interface{}{
-				"a": []interface{}{
-					map[string]interface{}{
-						"b": []interface{}{
-							map[string]interface{}{
-								"c": 9,
-							},
-							map[string]interface{}{
-								"d": 15,
-							},
-						},
+			zrule.Killmail{
+				Meta: &zrule.Meta{
+					Solo: true,
+				},
+			},
+			"testing boolean on nested struct",
+			true,
+		},
+		{
+			[][]*ruler.Rule{
+				[]*ruler.Rule{
+					&ruler.Rule{
+						"eq",
+						"Victim.ShipTypeID",
+						[]interface{}{670},
 					},
-					map[string]interface{}{
-						"f": []interface{}{
-							map[string]interface{}{
-								"f": 9,
-							},
-							map[string]interface{}{
-								"g": 42,
-							},
-						},
+					&ruler.Rule{
+						"gt",
+						"Meta.TotalValue",
+						[]interface{}{10000},
 					},
 				},
 			},
-			"testing of or, first should fail, second should pass",
+			zrule.Killmail{
+				Victim: &zrule.KillmailVictim{
+					ShipTypeID: 670,
+				},
+				Meta: &zrule.Meta{
+					TotalValue: 10000,
+				},
+			},
+			"testing and rule, comparing victim ship and killmail total value, should return false",
+			false,
+		},
+		{
+			[][]*ruler.Rule{
+				[]*ruler.Rule{
+					&ruler.Rule{
+						"eq",
+						"Victim.ShipTypeID",
+						[]interface{}{670},
+					},
+					&ruler.Rule{
+						"gt",
+						"Meta.TotalValue",
+						[]interface{}{10000},
+					},
+				},
+			},
+			zrule.Killmail{
+				Victim: &zrule.KillmailVictim{
+					ShipTypeID: 670,
+				},
+				Meta: &zrule.Meta{
+					TotalValue: 15000,
+				},
+			},
+			"testing and rule, comparing victim ship and killmail total value, should return true",
 			true,
 		},
 	}
 
 	for _, c := range cases {
-		r := &Ruler{
-			rules: c.rules,
-		}
+		r := ruler.NewRuler()
+		r.SetRules(c.rules)
 
-		result, err := r.Test(c.o)
-		if err != nil {
-			t.Errorf("Test Failed with Error:\nName: %s\nError: %s", c.name, err)
-		}
-
+		result := r.Test(c.o)
 		if result != c.result {
 			values, _ := json.Marshal(c.o)
-			t.Errorf("Test Failed without Error:\nName: %s\nRules: %s\nValues: %s\nExpected %t, Got %t",
+			t.Errorf("Test Failed:\nName: %s\nRules: %s\nValues: %s\nExpected %t, Got %t",
 				c.name,
 				c.rules,
 				string(values),
