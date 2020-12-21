@@ -308,6 +308,7 @@ var AllPaths = []PathObj{
 	PathVictimCharacterID,
 	PathVictimFactionID,
 	PathVictimShipTypeID,
+	PathVictimShipGroupID,
 	PathAttackerAllianceID,
 	PathAttackerCorporationID,
 	PathAttackerCharacterID,
