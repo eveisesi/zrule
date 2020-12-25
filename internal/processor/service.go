@@ -225,28 +225,33 @@ func (s *service) Run(limit int64) error {
 }
 
 func (s *service) handleMessage(ctx context.Context, message []byte) {
-	defer newrelic.FromContext(ctx).End()
+
+	txn := s.newrelic.StartTransaction("handle message")
+
 	var killmail *zrule.Killmail
 	err := json.Unmarshal(message, &killmail)
 	if err != nil {
-		newrelic.FromContext(ctx).NoticeError(err)
+		txn.NoticeError(err)
+		txn.End()
 		s.logger.WithError(err).Errorf("failed to decode message onto %T", killmail)
+		return
 	}
+
+	txn.AddAttribute("killmailID", killmail.ID)
+	txn.AddAttribute("killmailHash", killmail.Hash)
 
 	// Hydrate the Killmail with Constellation and Region ID based on the SolarSystem
 
 	s.hydrateKillmail(ctx, killmail)
 
 	for _, tracker := range s.trackers.trackers {
-		result := tracker.ruler.Test(killmail)
-		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
-			s.logger.WithError(err).WithFields(logrus.Fields{
-				"policyID": tracker.policy.ID,
-			}).Error("failed to apply rules to killmail")
-		}
+		seg := txn.StartSegment("run trackers")
+		seg.AddAttribute("trackerID", tracker.policy.ID.Hex())
 
+		result := tracker.ruler.Test(killmail)
+		seg.AddAttribute("result", result)
 		if !result {
+			seg.End()
 			continue
 		}
 
@@ -261,14 +266,16 @@ func (s *service) handleMessage(ctx context.Context, message []byte) {
 
 		data, err := json.Marshal(payload)
 		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
+			txn.NoticeError(err)
 			s.logger.WithError(err).Error("failed to marsahl payload for successfully match")
+			continue
 		}
 
-		_, err = s.redis.ZAdd(ctx, zrule.QUEUES_KILLMAIL_MATCHED, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(data)}).Result()
+		_, err = s.redis.ZAdd(newrelic.NewContext(context.Background(), txn), zrule.QUEUES_KILLMAIL_MATCHED, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(data)}).Result()
 		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
+			txn.NoticeError(err)
 			s.logger.WithError(err).WithField("payload", string(message)).Error("unable to push payload to matched queue")
+			continue
 		}
 
 	}
