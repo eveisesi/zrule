@@ -108,49 +108,58 @@ func (s *service) Run() error {
 
 func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
+	txn := s.newrelic.StartTransaction("handle message")
+	ctx = newrelic.NewContext(ctx, txn)
+
 	var message = new(zrule.Dispatchable)
 	err := json.Unmarshal(data, message)
 	if err != nil {
-		newrelic.FromContext(ctx).NoticeError(err)
+		txn.NoticeError(err)
 		s.logger.WithError(err).WithField("data", string(data)).Error("failed to unmarsahl data onto dispatchable struct")
 		return
 	}
 
 	policy, err := s.policy.Policy(ctx, message.PolicyID)
 	if err != nil {
-		newrelic.FromContext(ctx).NoticeError(err)
+		txn.NoticeError(err)
 		s.logger.WithError(err).WithField("policyID", message.PolicyID).Error("failed to look up policy")
 		return
 	}
 
-	newrelic.FromContext(ctx).AddAttribute("policyID", message.PolicyID.Hex())
+	txn.AddAttribute("policyID", message.PolicyID.Hex())
 
 	for _, actionID := range policy.Actions {
+		dispatchTxn := s.newrelic.StartTransaction("dispatch action")
+		dispatchTxn.AddAttribute("policyID", message.PolicyID.Hex())
+		dispatchTxn.AddAttribute("actionID", actionID)
 		entry := s.logger.WithField("policyID", message.PolicyID.Hex()).WithField("actionID", actionID)
 		action, err := s.action.Action(ctx, actionID)
 		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
+			dispatchTxn.NoticeError(err)
 			entry.WithError(err).Error("failed to lookup action")
 			continue
 		}
-
+		dispatchTxn.AddAttribute("platform", action.Platform.String())
 		entry = entry.WithField("platform", action.Platform.String())
 
 		platform, err := s.serviceForPlatform(action)
 		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
+			dispatchTxn.NoticeError(err)
 			entry.WithError(err).Error("unable to determine platform to use")
 			continue
 		}
 
-		err = platform.Send(ctx, policy, message.ID, message.Hash)
+		err = platform.Send(newrelic.NewContext(ctx, dispatchTxn), policy, message.ID, message.Hash)
 		if err != nil {
-			newrelic.FromContext(ctx).NoticeError(err)
+			dispatchTxn.NoticeError(err)
 			entry.WithError(err).Error("failed to send message to platform")
 			continue
 		}
 		time.Sleep(time.Second)
+		dispatchTxn.End()
 	}
+
+	txn.End()
 
 }
 
