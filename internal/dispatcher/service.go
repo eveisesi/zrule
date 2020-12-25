@@ -109,7 +109,7 @@ func (s *service) Run() error {
 func (s *service) handleMessage(ctx context.Context, data []byte, sleep int) {
 
 	txn := s.newrelic.StartTransaction("handle message")
-	ctx = newrelic.NewContext(context.Background(), txn)
+	ctx = newrelic.NewContext(ctx, txn)
 
 	var message = new(zrule.Dispatchable)
 	err := json.Unmarshal(data, message)
