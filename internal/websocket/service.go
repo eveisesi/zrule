@@ -60,8 +60,12 @@ func (s *service) Run() error {
 		}
 		for {
 
+			txn := s.newrelic.StartTransaction("handle message")
+
 			_, message, err := conn.ReadMessage()
 			if err != nil {
+				txn.NoticeError(err)
+				txn.End()
 				var werr *websocket.CloseError
 				if errors.Is(err, werr) {
 					if werr.Code == 1000 {
@@ -77,12 +81,15 @@ func (s *service) Run() error {
 				}
 				break
 			}
-
-			_, err = s.redis.ZAdd(context.Background(), zrule.QUEUES_KILLMAIL_PROCESSING, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(message)}).Result()
+			ctx := newrelic.NewContext(context.Background(), txn)
+			_, err = s.redis.ZAdd(ctx, zrule.QUEUES_KILLMAIL_PROCESSING, &redis.Z{Score: float64(time.Now().UnixNano()), Member: string(message)}).Result()
 			if err != nil {
+				txn.NoticeError(err)
 				s.logger.WithError(err).WithField("payload", string(message)).Error("unable to push killmail to processing queue")
 				return err
 			}
+
+			txn.End()
 			s.logger.Info("message received")
 
 		}
